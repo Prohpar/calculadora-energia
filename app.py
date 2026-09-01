@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
 st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
-st.caption("Dimensionamiento directo de potencia (W) y energía (Wh) sin márgenes adicionales.")
+st.caption("Dimensionamiento directo de potencia (W), energía (Wh) y pico de arranque (VA).")
 
 # Base de equipos completa (56 items)
 EQUIPOS_BASE = {
@@ -67,20 +67,21 @@ EQUIPOS_BASE = {
 }
 
 CATALOGO_BLUETTI = [
-    {"modelo": "AC2P", "w": 300, "pico": 600, "wh_util": 195.84},
-    {"modelo": "Premium 30 V2", "w": 600, "pico": 1500, "wh_util": 272.00},
-    {"modelo": "AC50P", "w": 700, "pico": 1200, "wh_util": 428.40},
-    {"modelo": "AC70P", "w": 1000, "pico": 2000, "wh_util": 734.40},
-    {"modelo": "Premium 100 V2", "w": 2000, "pico": 3600, "wh_util": 870.40},
-    {"modelo": "Premium 200 V2", "w": 2700, "pico": 3900, "wh_util": 1762.56},
+    {"modelo": "AC2P", "w": 300, "pico": 300, "wh_util": 195.84},
+    {"modelo": "Premium 30 V2", "w": 600, "pico": 600, "wh_util": 272.00},
+    {"modelo": "AC50P", "w": 700, "pico": 700, "wh_util": 428.40},
+    {"modelo": "AC70P", "w": 1000, "pico": 1000, "wh_util": 734.40},
+    {"modelo": "Premium 100 V2", "w": 2000, "pico": 2000, "wh_util": 870.40},
+    {"modelo": "Premium 200 V2", "w": 2700, "pico": 2700, "wh_util": 1762.56},
     {"modelo": "Apex 300", "w": 3840, "pico": 3840, "wh_util": 2350.08},
 ]
 
+# Catálogo MUST con picos ajustados: EP30 (9 kVA), PV33 (12 kVA), PV39 (36 kVA)
 CATALOGO_MUST = [
     {"modelo": "EP30-3024 LV2 + batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 1843.2},
     {"modelo": "EP30-3024 LV2 + 2x batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 3686.4},
-    {"modelo": "PV33-6048 TLV + LP16-48100", "w": 6000, "pico": 18000, "wh_util": 3686.4},
-    {"modelo": "PV33-6048 TLV + LP16-48200", "w": 6000, "pico": 18000, "wh_util": 7372.8},
+    {"modelo": "PV33-6048 TLV + LP16-48100", "w": 6000, "pico": 12000, "wh_util": 3686.4},
+    {"modelo": "PV33-6048 TLV + LP16-48200", "w": 6000, "pico": 12000, "wh_util": 7372.8},
     {"modelo": "PV39-12048 TLV + LP16-48200", "w": 12000, "pico": 36000, "wh_util": 7372.8},
     {"modelo": "PV39-12048 TLV + 2x LP16-48200", "w": 12000, "pico": 36000, "wh_util": 14745.6},
 ]
@@ -116,6 +117,7 @@ if st.session_state.cargas:
     df = pd.DataFrame(st.session_state.cargas)
     df['W_Total'] = df['cant'] * df['w']
     df['Wh_Total'] = df['W_Total'] * df['horas'] * df['ciclo']
+    df['Extra_Arranque'] = df['W_Total'] * (df['arr'] - 1.0).clip(lower=0)
 
     st.dataframe(df[['equipo', 'cant', 'w', 'W_Total', 'horas', 'Wh_Total']], use_container_width=True)
 
@@ -123,22 +125,26 @@ if st.session_state.cargas:
         st.session_state.cargas = []
         st.rerun()
 
-    # Cálculo directo neto de potencia y energía
+    # Cálculos directos netos
     w_req = df['W_Total'].sum()
     wh_req = df['Wh_Total'].sum()
+    peor_arranque = df['Extra_Arranque'].max() if not df.empty else 0
+    pico_req = w_req + peor_arranque
 
-    st.subheader("2. Requerimiento Neto (Sin Márgenes)")
-    col1, col2 = st.columns(2)
-    col1.metric("Potencia Directa", f"{w_req:.1f} W")
-    col2.metric("Energía Directa", f"{wh_req:.1f} Wh")
+    st.subheader("2. Requerimientos Netos del Proyecto")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Potencia Continua", f"{w_req:.1f} W")
+    col2.metric("Energía Total", f"{wh_req:.1f} Wh")
+    col3.metric("Pico de Arranque", f"{pico_req:.1f} VA")
 
-    bluetti = next((b for b in CATALOGO_BLUETTI if b['w'] >= w_req and b['wh_util'] >= wh_req), None)
-    must = next((m for m in CATALOGO_MUST if m['w'] >= w_req and m['wh_util'] >= wh_req), None)
+    # Selección considerando Potencia, Energía y Pico de Arranque
+    bluetti = next((b for b in CATALOGO_BLUETTI if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), None)
+    must = next((m for m in CATALOGO_MUST if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
 
     st.subheader("3. Equipo Recomendado")
     if bluetti:
-        st.success(f"🟢 **BLUETTI:** {bluetti['modelo']} ({bluetti['w']} W | {bluetti['wh_util']:.1f} Wh útiles)")
+        st.success(f"🟢 **BLUETTI:** {bluetti['modelo']} ({bluetti['w']} W continuos | {bluetti['pico']} W pico | {bluetti['wh_util']:.1f} Wh útiles)")
     elif must:
-        st.warning(f"🟡 **MUST:** {must['modelo']} ({must['w']} W | {must['wh_util']:.1f} Wh útiles)")
+        st.warning(f"🟡 **MUST:** {must['modelo']} ({must['w']} W continuos | {must['pico']} VA pico | {must['wh_util']:.1f} Wh útiles)")
     else:
         st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
