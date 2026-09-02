@@ -42,7 +42,7 @@ st.markdown(f"""
 
 # --- FIN INYECCIÓN CSS ---
 
-st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
+st.title("⚡Selección⚡MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
 # Base de equipos completa (56 items)
@@ -50,26 +50,26 @@ EQUIPOS_BASE = {
     'Bombillo LED 18W': {'w': 18, 'arr': 1.0},
     'Router / módem': {'w': 17, 'arr': 1.0},
     'Cargador de teléfono': {'w': 15, 'arr': 1.0},
-    'Monitor': {'w': 30, 'arr': 1.1},
-    'Impresora de tinta': {'w': 30, 'arr': 1.2},
-    'Sistema CCTV': {'w': 60, 'arr': 1.2},
+    'Monitor': {'w': 30, 'arr': 1.0},
+    'Impresora de tinta': {'w': 30, 'arr': 1.0},
+    'Sistema CCTV': {'w': 60, 'arr': 1.0},
     'Laptop': {'w': 65, 'arr': 1.0},
-    'Ventilador': {'w': 80, 'arr': 2.0},
-    'Televisor LED 32"': {'w': 45, 'arr': 1.2},
-    'Televisor LED 40" / 43"': {'w': 65, 'arr': 1.2},
-    'Televisor LED 50"': {'w': 90, 'arr': 1.2},
-    'Televisor LED 55"': {'w': 120, 'arr': 1.2},
-    'Televisor LED 65"': {'w': 160, 'arr': 1.2},
-    'Televisor LED 75"': {'w': 200, 'arr': 1.2},
-    'Televisor LED (genérico)': {'w': 100, 'arr': 1.2},
+    'Ventilador': {'w': 80, 'arr': 1.0},
+    'Televisor LED 32"': {'w': 45, 'arr': 1.0},
+    'Televisor LED 40" / 43"': {'w': 65, 'arr': 1.0},
+    'Televisor LED 50"': {'w': 90, 'arr': 1.0},
+    'Televisor LED 55"': {'w': 120, 'arr': 1.0},
+    'Televisor LED 65"': {'w': 160, 'arr': 1.0},
+    'Televisor LED 75"': {'w': 200, 'arr': 1.0},
+    'Televisor LED (genérico)': {'w': 100, 'arr': 1.0},
     'Nevera': {'w': 200, 'arr': 3.0},
-    'Computadora de escritorio': {'w': 250, 'arr': 1.5},
+    'Computadora de escritorio': {'w': 250, 'arr': 1.0},
     'Congelador': {'w': 250, 'arr': 3.0},
     'Licuadora': {'w': 500, 'arr': 2.0},
-    'Impresora láser': {'w': 600, 'arr': 2.0},
+    'Impresora láser': {'w': 600, 'arr': 1.0},
     'Bomba de agua 1/2 HP': {'w': 750, 'arr': 3.0},
     'Cafetera eléctrica': {'w': 1000, 'arr': 1.0},
-    'Microondas': {'w': 1200, 'arr': 1.3},
+    'Microondas': {'w': 1200, 'arr': 1.1},
     'Secador de cabello': {'w': 1500, 'arr': 1.0},
     'Herramienta eléctrica': {'w': 1500, 'arr': 2.5},
     'Aire acondicionado 5.000 BTU — convencional': {'w': 500, 'arr': 3.0},
@@ -106,12 +106,12 @@ EQUIPOS_BASE = {
 }
 
 CATALOGO_BLUETTI = [
-    {"modelo": "AC2P", "w": 300, "pico": 600, "wh_util": 195.84},
-    {"modelo": "Premium 30 V2", "w": 600, "pico": 1500, "wh_util": 272.00},
-    {"modelo": "AC50P", "w": 700, "pico": 1200, "wh_util": 428.40},
-    {"modelo": "AC70P", "w": 1000, "pico": 2000, "wh_util": 734.40},
-    {"modelo": "Premium 100 V2", "w": 2000, "pico": 3600, "wh_util": 870.40},
-    {"modelo": "Premium 200 V2", "w": 2700, "pico": 3900, "wh_util": 1762.56},
+    {"modelo": "AC2P", "w": 300, "pico": 300, "wh_util": 195.84},
+    {"modelo": "Premium 30 V2", "w": 600, "pico": 600, "wh_util": 272.00},
+    {"modelo": "AC50P", "w": 700, "pico": 700, "wh_util": 428.40},
+    {"modelo": "AC70P", "w": 1000, "pico": 1000, "wh_util": 734.40},
+    {"modelo": "Premium 100 V2", "w": 2000, "pico": 2000, "wh_util": 1024.00},
+    {"modelo": "Premium 200 V2", "w": 2700, "pico": 2700, "wh_util": 1762.56},
     {"modelo": "Apex 300", "w": 3840, "pico": 3840, "wh_util": 2350.08},
 ]
 
