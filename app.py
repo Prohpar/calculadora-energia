@@ -33,7 +33,7 @@ st.markdown(f"""
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 55% auto;
-    opacity: 0.08; /* Opacidad tipo marca de agua (8%) */
+    opacity: 0.4; /* Opacidad tipo marca de agua (8%) */
     pointer-events: none;
     z-index: 0;
 }}
