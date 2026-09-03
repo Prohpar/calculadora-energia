@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- INYECCIÓN DE CSS PARA MARCA DE AGUA DE PRODIMIC AL 50% DE OPACIDAD ---
+# --- INYECCIÓN DE CSS PARA RESPONSIVIDAD MÓVIL Y MARCA DE AGUA (50%) ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
@@ -17,6 +17,7 @@ bg_style = f"data:image/png;base64,{logo_b64}" if logo_b64 else "logo_prodimic.p
 
 st.markdown(f"""
 <style>
+/* Marca de agua de fondo al 50% */
 [data-testid="stAppViewContainer"]::before {{
     content: "";
     position: fixed;
@@ -27,17 +28,29 @@ st.markdown(f"""
     background-image: url("{bg_style}");
     background-repeat: no-repeat;
     background-position: center 40%;
-    background-size: 55% auto;
-    opacity: 0.50; /* Opacidad al 50% */
+    background-size: 65% auto;
+    opacity: 0.50;
     pointer-events: none;
     z-index: 0;
+}}
+
+/* Ajustes de margen y padding para pantallas móviles */
+@media (max-width: 640px) {{
+    .block-container {{
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        padding-top: 1rem !important;
+    }}
+    h1 {{
+        font-size: 1.5rem !important;
+    }}
 }}
 </style>
 """, unsafe_allow_html=True)
 
-# --- CABECERA CON ÚNICO LOGO (PRODIMIC) ---
+# --- CABECERA CON LOGO PRODIMIC ---
 if os.path.exists("logo_prodimic.png"):
-    st.image("logo_prodimic.png", width=280)
+    st.image("logo_prodimic.png", width=250)
 
 st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
@@ -124,7 +137,7 @@ CATALOGO_BLUETTI = [
     {"modelo": "Apex 300 + 2x B300K", "w": 3840, "pico": 3840, "wh_util": 7050.24, "v220": True},
 ]
 
-# Catálogo MUST (Mantiene picos de arranque del inversor: 9 kVA, 12 kVA, 36 kVA)
+# Catálogo MUST (Mantiene picos del inversor: 9 kVA, 12 kVA, 36 kVA)
 CATALOGO_MUST = [
     {"modelo": "EP30-3024 LV2 + batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 1843.2, "v220": False},
     {"modelo": "EP30-3024 LV2 + 2x batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 3686.4, "v220": False},
@@ -144,13 +157,14 @@ if 'cargas' not in st.session_state:
         {"equipo": "Bombillo LED 18W", "cant": 6, "w": 18, "arr": 1.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 1.0},
     ]
 
+# Formulario adaptado
 with st.form("add_form"):
-    c1, c2, c3 = st.columns([2, 1, 1])
-    eq_sel = c1.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()))
-    cant_in = c2.number_input("Cantidad", min_value=1, value=1)
-    horas_in = c3.number_input("Horas uso", min_value=0.5, value=4.0, step=0.5)
+    eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()))
+    col_f1, col_f2 = st.columns(2)
+    cant_in = col_f1.number_input("Cantidad", min_value=1, value=1)
+    horas_in = col_f2.number_input("Horas uso", min_value=0.5, value=4.0, step=0.5)
     
-    submitted = st.form_submit_button("➕ Agregar a la Lista")
+    submitted = st.form_submit_button("➕ Agregar a la Lista", use_container_width=True)
     if submitted:
         eq_data = EQUIPOS_BASE[eq_sel]
         st.session_state.cargas.append({
@@ -164,40 +178,32 @@ with st.form("add_form"):
             "ciclo": 1.0
         })
 
+# Despliegue en tarjetas para teléfonos móviles
 if st.session_state.cargas:
     st.write("### Lista de Cargas Seleccionadas")
-    
     idx_eliminar = None
-    
-    col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([2.5, 1, 1, 1, 1.2, 0.8])
-    col_h1.markdown("**Equipo**")
-    col_h2.markdown("**Cant.**")
-    col_h3.markdown("**W Tot.**")
-    col_h4.markdown("**Horas**")
-    col_h5.markdown("**Wh Tot.**")
-    col_h6.markdown("**Acción**")
-    st.divider()
 
     for idx, item in enumerate(st.session_state.cargas):
         w_tot = item['cant'] * item['w']
         wh_tot = w_tot * item['horas'] * item['ciclo']
         
-        col1, col2, col3, col4, col5, col6 = st.columns([2.5, 1, 1, 1, 1.2, 0.8])
-        col1.write(item['equipo'])
-        col2.write(str(item['cant']))
-        col3.write(f"{w_tot} W")
-        col4.write(f"{item['horas']} h")
-        col5.write(f"{wh_tot:.0f} Wh")
-        
-        if col6.button("🗑️", key=f"del_{idx}"):
-            idx_eliminar = idx
+        # Tarjeta contenedor individual responsiva
+        with st.container(border=True):
+            c_card1, c_card2 = st.columns([0.82, 0.18])
+            with c_card1:
+                st.markdown(f"**{item['equipo']}**")
+                st.caption(f"Cantidad: **{item['cant']}** | Potencia: **{w_tot} W**")
+                st.caption(f"Uso: **{item['horas']} h** | Energía: **{wh_tot:.0f} Wh**")
+            with c_card2:
+                if st.button("🗑️", key=f"del_{idx}"):
+                    idx_eliminar = idx
 
     if idx_eliminar is not None:
         st.session_state.cargas.pop(idx_eliminar)
         st.rerun()
 
     st.write("---")
-    if st.button("🗑️ Limpiar Toda la Lista"):
+    if st.button("🗑️ Limpiar Toda la Lista", use_container_width=True):
         st.session_state.cargas = []
         st.rerun()
 
@@ -212,24 +218,22 @@ if st.session_state.cargas:
         peor_arranque = df['Extra_Arranque'].max()
         pico_req = w_req + peor_arranque
 
-        # Evaluación de condición 220V o AC > 12.000 BTU
         requiere_alta_capacidad = any(item.get('v') == 220 or item.get('btu', 0) > 12000 for item in st.session_state.cargas)
 
-        st.subheader("2. Requerimientos Netos del Proyecto")
+        st.subheader("2. Requerimientos Netos")
         col1, col2, col3 = st.columns(3)
-        col1.metric("Potencia Continua", f"{w_req:.1f} W")
-        col2.metric("Energía Total", f"{wh_req:.1f} Wh")
-        col3.metric("Pico de Arranque", f"{pico_req:.1f} VA")
+        col1.metric("Potencia", f"{w_req:.0f} W")
+        col2.metric("Energía", f"{wh_req:.0f} Wh")
+        col3.metric("Pico", f"{pico_req:.0f} VA")
 
         if requiere_alta_capacidad:
-            st.info("⚡ **Detección de Alta Potencia / 220V:** Se han restringido los resultados únicamente a sistemas compatibles (Apex 300, PV33 y PV39).")
+            st.info("⚡ **Filtro 220V / Carga Comercial:** Búsqueda limitada a Apex 300, PV33 y PV39.")
             cat_bluetti_eval = [b for b in CATALOGO_BLUETTI if b['v220']]
             cat_must_eval = [m for m in CATALOGO_MUST if m['v220']]
         else:
             cat_bluetti_eval = CATALOGO_BLUETTI
             cat_must_eval = CATALOGO_MUST
 
-        # Selección de candidatos
         bluetti_rec = next((b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), None)
         must_rec = next((m for m in cat_must_eval if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
 
