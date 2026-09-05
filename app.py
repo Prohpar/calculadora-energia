@@ -29,7 +29,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.20;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
@@ -62,10 +62,10 @@ h1 {{
 if os.path.exists("logo_prodimic.png"):
     st.image("logo_prodimic.png", use_container_width=True)
 
-st.title("⚡Calculador de Respaldo MUST & BLUETTI")
+st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
-# Base de equipos completa (con opciones de iluminación de 4W, 9W, 12W y Opción Genérica)
+# Base de equipos completa
 EQUIPOS_BASE = {
     'Bombillo LED 4W': {'w': 4, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Bombillo LED 9W': {'w': 9, 'arr': 1.0, 'v': 120, 'btu': 0},
@@ -333,24 +333,27 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
 
 st.subheader("1. Selección de Cargas")
 
-# Se inicializa la lista vacía (sin pre-cargar equipos)
+# Inicialización de lista vacía
 if 'cargas' not in st.session_state:
     st.session_state.cargas = []
 
-with st.form("add_form"):
-    eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()))
+# --- CONTENEDOR DE SELECCIÓN REACTIVO EN TIEMPO REAL (SIN FORMULARIO) ---
+with st.container(border=True):
+    eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()), key="eq_select")
     
     is_custom = (eq_sel == 'Otro / Personalizado')
+    
+    # Despliegue dinámico e inmediato de campos si es personalizado
     if is_custom:
-        w_custom = st.number_input("Ingrese la Potencia en Vatios (W)", min_value=1, value=100, step=10)
-        arr_custom = st.number_input("Factor de arranque (ej: 1.0 normal, 3.0 motores/neveras)", min_value=1.0, value=1.0, step=0.5)
+        col_c1, col_c2 = st.columns(2)
+        w_custom = col_c1.number_input("Potencia en Vatios (W)", min_value=1, value=100, step=10, key="w_custom_in")
+        arr_custom = col_c2.number_input("Factor de arranque (1.0 normal, 3.0 neveras)", min_value=1.0, value=1.0, step=0.5, key="arr_custom_in")
 
     col_f1, col_f2 = st.columns(2)
-    cant_in = col_f1.number_input("Cantidad", min_value=1, value=1)
-    horas_in = col_f2.number_input("Horas uso", min_value=0.5, value=4.0, step=0.5)
+    cant_in = col_f1.number_input("Cantidad", min_value=1, value=1, key="cant_in")
+    horas_in = col_f2.number_input("Horas uso", min_value=0.5, value=4.0, step=0.5, key="horas_in")
     
-    submitted = st.form_submit_button("➕ Agregar a la Lista", use_container_width=True)
-    if submitted:
+    if st.button("➕ Agregar a la Lista", use_container_width=True, type="primary"):
         eq_data = EQUIPOS_BASE[eq_sel]
         real_w = w_custom if is_custom else eq_data['w']
         real_arr = arr_custom if is_custom else eq_data['arr']
