@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- INYECCIÓN DE CSS PARA RESPONSIVIDAD MÓVIL Y MARCA DE AGUA (50%) ---
+# --- INYECCIÓN DE CSS PARA MARCA DE AGUA DE PRODIMIC AL 50% DE OPACIDAD ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
@@ -17,7 +17,7 @@ bg_style = f"data:image/png;base64,{logo_b64}" if logo_b64 else "logo_prodimic.p
 
 st.markdown(f"""
 <style>
-/* Marca de agua de fondo al 50% */
+/* Fondo en marca de agua (50% opacidad) */
 [data-testid="stAppViewContainer"]::before {{
     content: "";
     position: fixed;
@@ -34,7 +34,7 @@ st.markdown(f"""
     z-index: 0;
 }}
 
-/* Ajustes de margen y padding para pantallas móviles */
+/* Responsividad para móviles */
 @media (max-width: 640px) {{
     .block-container {{
         padding-left: 0.8rem !important;
@@ -48,14 +48,14 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# --- CABECERA CON LOGO PRODIMIC ---
+# --- CABECERA CON LOGO DE PRODIMIC ---
 if os.path.exists("logo_prodimic.png"):
     st.image("logo_prodimic.png", width=250)
 
 st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
-# Base de equipos completa con metadatos de voltaje y BTU (Electrónicos con arr = 1.0)
+# Base de equipos completa
 EQUIPOS_BASE = {
     'Bombillo LED 18W': {'w': 18, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Router / módem': {'w': 17, 'arr': 1.0, 'v': 120, 'btu': 0},
@@ -123,29 +123,172 @@ EQUIPOS_BASE = {
     'Otro / manual': {'w': 0, 'arr': 1.0, 'v': 120, 'btu': 0}
 }
 
-# Catálogo BLUETTI (Pico ajustado igual a Potencia Continua: pico = w)
+# Catálogo BLUETTI
 CATALOGO_BLUETTI = [
-    {"modelo": "AC2P", "w": 300, "pico": 300, "wh_util": 195.84, "v220": False},
-    {"modelo": "Premium 30 V2", "w": 600, "pico": 600, "wh_util": 272.00, "v220": False},
-    {"modelo": "AC50P", "w": 700, "pico": 700, "wh_util": 428.40, "v220": False},
-    {"modelo": "AC70P", "w": 1000, "pico": 1000, "wh_util": 734.40, "v220": False},
-    {"modelo": "AC180P", "w": 1800, "pico": 1800, "wh_util": 1224.00, "v220": False},
-    {"modelo": "Premium 100 V2", "w": 2000, "pico": 2000, "wh_util": 870.40, "v220": False},
-    {"modelo": "Premium 200 V2", "w": 2700, "pico": 2700, "wh_util": 1762.56, "v220": False},
-    {"modelo": "Apex 300", "w": 3840, "pico": 3840, "wh_util": 2350.08, "v220": True},
-    {"modelo": "Apex 300 + B300K", "w": 3840, "pico": 3840, "wh_util": 4700.16, "v220": True},
-    {"modelo": "Apex 300 + 2x B300K", "w": 3840, "pico": 3840, "wh_util": 7050.24, "v220": True},
+    {"modelo": "AC2P", "w": 300, "pico": 300, "wh_util": 195.84, "v220": False, 
+     "fichas": [{"nombre": "Estación AC2P", "base": "fichas/bluetti_ac2p"}]},
+    {"modelo": "Premium 30 V2", "w": 600, "pico": 600, "wh_util": 272.00, "v220": False, 
+     "fichas": [{"nombre": "Estación Premium 30 V2", "base": "fichas/bluetti_premium30"}]},
+    {"modelo": "AC50P", "w": 700, "pico": 700, "wh_util": 428.40, "v220": False, 
+     "fichas": [{"nombre": "Estación AC50P", "base": "fichas/bluetti_ac50p"}]},
+    {"modelo": "AC70P", "w": 1000, "pico": 1000, "wh_util": 734.40, "v220": False, 
+     "fichas": [{"nombre": "Estación AC70P", "base": "fichas/bluetti_ac70p"}]},
+    {"modelo": "AC180P", "w": 1800, "pico": 1800, "wh_util": 1224.00, "v220": False, 
+     "fichas": [{"nombre": "Estación AC180P", "base": "fichas/bluetti_ac180p"}]},
+    {"modelo": "Premium 100 V2", "w": 2000, "pico": 2000, "wh_util": 870.40, "v220": False, 
+     "fichas": [{"nombre": "Estación Premium 100 V2", "base": "fichas/bluetti_premium100"}]},
+    {"modelo": "Premium 200 V2", "w": 2700, "pico": 2700, "wh_util": 1762.56, "v220": False, 
+     "fichas": [{"nombre": "Estación Premium 200 V2", "base": "fichas/bluetti_premium200"}]},
+    {"modelo": "Apex 300", "w": 3840, "pico": 3840, "wh_util": 2350.08, "v220": True, 
+     "fichas": [{"nombre": "Estación Apex 300", "base": "fichas/bluetti_apex300"}]},
+    {"modelo": "Apex 300 + B300K", "w": 3840, "pico": 3840, "wh_util": 4700.16, "v220": True, 
+     "fichas": [
+         {"nombre": "Estación Apex 300", "base": "fichas/bluetti_apex300"},
+         {"nombre": "Batería B300K", "base": "fichas/bluetti_b300k"}
+     ]},
+    {"modelo": "Apex 300 + 2x B300K", "w": 3840, "pico": 3840, "wh_util": 7050.24, "v220": True, 
+     "fichas": [
+         {"nombre": "Estación Apex 300", "base": "fichas/bluetti_apex300"},
+         {"nombre": "Batería B300K", "base": "fichas/bluetti_b300k"}
+     ]},
+    {"modelo": "Apex 300 + 3x B300K", "w": 3840, "pico": 3840, "wh_util": 9400.32, "v220": True, 
+     "fichas": [
+         {"nombre": "Estación Apex 300", "base": "fichas/bluetti_apex300"},
+         {"nombre": "Batería B300K", "base": "fichas/bluetti_b300k"}
+     ]},
+    {"modelo": "Apex 300 + 4x B300K", "w": 3840, "pico": 3840, "wh_util": 11750.40, "v220": True, 
+     "fichas": [
+         {"nombre": "Estación Apex 300", "base": "fichas/bluetti_apex300"},
+         {"nombre": "Batería B300K", "base": "fichas/bluetti_b300k"}
+     ]},
 ]
 
-# Catálogo MUST (Mantiene picos del inversor: 9 kVA, 12 kVA, 36 kVA)
-CATALOGO_MUST = [
-    {"modelo": "EP30-3024 LV2 + batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 1843.2, "v220": False},
-    {"modelo": "EP30-3024 LV2 + 2x batería 24V 100Ah", "w": 3000, "pico": 9000, "wh_util": 3686.4, "v220": False},
-    {"modelo": "PV33-6048 TLV + LP16-48100", "w": 6000, "pico": 12000, "wh_util": 3686.4, "v220": True},
-    {"modelo": "PV33-6048 TLV + LP16-48200", "w": 6000, "pico": 12000, "wh_util": 7372.8, "v220": True},
-    {"modelo": "PV39-12048 TLV + LP16-48200", "w": 12000, "pico": 36000, "wh_util": 7372.8, "v220": True},
-    {"modelo": "PV39-12048 TLV + 2x LP16-48200", "w": 12000, "pico": 36000, "wh_util": 14745.6, "v220": True},
-]
+# Catálogo MUST Generado Dinámicamente (Ambas baterías LP16 comparten la ficha "fichas/must_lp16")
+CATALOGO_MUST = []
+
+# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah)
+for n in range(1, 6):
+    cant_str = f"{n}x " if n > 1 else ""
+    CATALOGO_MUST.append({
+        "modelo": f"EP30-3024 LV2 + {cant_str}batería 24V 100Ah",
+        "w": 3000,
+        "pico": 9000,
+        "wh_util": round(1843.2 * n, 1),
+        "v220": False,
+        "bat_type": "24V100",
+        "fichas": [
+            {"nombre": "Inversor EP30-3024 LV2", "base": "fichas/must_ep30"},
+            {"nombre": "Batería 24V 100Ah", "base": "fichas/must_bat_24v100"}
+        ]
+    })
+
+# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías)
+for n in range(1, 11):
+    cant_str = f"{n}x " if n > 1 else ""
+    CATALOGO_MUST.append({
+        "modelo": f"PV33-6048 TLV + {cant_str}LP16-48100",
+        "w": 6000,
+        "pico": 12000,
+        "wh_util": round(3686.4 * n, 1),
+        "v220": True,
+        "bat_type": "LP16-48100",
+        "fichas": [
+            {"nombre": "Inversor PV33-6048 TLV", "base": "fichas/must_pv33"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías)
+for n in range(1, 11):
+    cant_str = f"{n}x " if n > 1 else ""
+    CATALOGO_MUST.append({
+        "modelo": f"PV33-6048 TLV + {cant_str}LP16-48200",
+        "w": 6000,
+        "pico": 12000,
+        "wh_util": round(7372.8 * n, 1),
+        "v220": True,
+        "bat_type": "LP16-48200",
+        "fichas": [
+            {"nombre": "Inversor PV33-6048 TLV", "base": "fichas/must_pv33"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías)
+for n in range(1, 11):
+    cant_str = f"{n}x " if n > 1 else ""
+    CATALOGO_MUST.append({
+        "modelo": f"PV39-12048 TLV + {cant_str}LP16-48100",
+        "w": 12000,
+        "pico": 36000,
+        "wh_util": round(3686.4 * n, 1),
+        "v220": True,
+        "bat_type": "LP16-48100",
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías)
+for n in range(1, 11):
+    cant_str = f"{n}x " if n > 1 else ""
+    CATALOGO_MUST.append({
+        "modelo": f"PV39-12048 TLV + {cant_str}LP16-48200",
+        "w": 12000,
+        "pico": 36000,
+        "wh_util": round(7372.8 * n, 1),
+        "v220": True,
+        "bat_type": "LP16-48200",
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# Ordenamiento por potencia y capacidad de energía ascendente
+CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
+
+# --- FUNCIÓN PARA DESPLEGAR MÚLTIPLES FICHAS TÉCNICAS POR COMBO ---
+def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
+    extensiones = [".jpg", ".png", ".jpeg", ".pdf"]
+    
+    for idx, item in enumerate(lista_fichas):
+        nombre_comp = item["nombre"]
+        base_path = item["base"]
+        archivo_encontrado = None
+        ext_encontrada = None
+
+        for ext in extensiones:
+            path_test = f"{base_path}{ext}"
+            if os.path.exists(path_test):
+                archivo_encontrado = path_test
+                ext_encontrada = ext
+                break
+
+        if archivo_encontrado:
+            if ext_encontrada in [".jpg", ".png", ".jpeg"]:
+                with st.expander(f"👁️ Ficha Técnica: {nombre_comp}"):
+                    st.image(archivo_encontrado, use_container_width=True)
+                    with open(archivo_encontrado, "rb") as file_bytes:
+                        st.download_button(
+                            label=f"💾 Descargar Ficha ({nombre_comp})",
+                            data=file_bytes,
+                            file_name=os.path.basename(archivo_encontrado),
+                            mime=f"image/{ext_encontrada.replace('.', '')}",
+                            use_container_width=True,
+                            key=f"{key_prefix}_{idx}_dl_img"
+                        )
+            elif ext_encontrada == ".pdf":
+                with open(archivo_encontrado, "rb") as file_bytes:
+                    st.download_button(
+                        label=f"📄 Descargar Ficha PDF ({nombre_comp})",
+                        data=file_bytes,
+                        file_name=os.path.basename(archivo_encontrado),
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key=f"{key_prefix}_{idx}_dl_pdf"
+                    )
 
 st.subheader("1. Selección de Cargas")
 
@@ -157,7 +300,6 @@ if 'cargas' not in st.session_state:
         {"equipo": "Bombillo LED 18W", "cant": 6, "w": 18, "arr": 1.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 1.0},
     ]
 
-# Formulario adaptado
 with st.form("add_form"):
     eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()))
     col_f1, col_f2 = st.columns(2)
@@ -178,7 +320,6 @@ with st.form("add_form"):
             "ciclo": 1.0
         })
 
-# Despliegue en tarjetas para teléfonos móviles
 if st.session_state.cargas:
     st.write("### Lista de Cargas Seleccionadas")
     idx_eliminar = None
@@ -187,7 +328,6 @@ if st.session_state.cargas:
         w_tot = item['cant'] * item['w']
         wh_tot = w_tot * item['horas'] * item['ciclo']
         
-        # Tarjeta contenedor individual responsiva
         with st.container(border=True):
             c_card1, c_card2 = st.columns([0.82, 0.18])
             with c_card1:
@@ -235,14 +375,33 @@ if st.session_state.cargas:
             cat_must_eval = CATALOGO_MUST
 
         bluetti_rec = next((b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), None)
-        must_rec = next((m for m in cat_must_eval if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
 
-        st.subheader("3. Equipo Recomendado")
+        # Evaluaciones independientes para MUST
+        must_rec_48100 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
+        must_rec_48200 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48200' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
+        must_rec_24v = next((m for m in cat_must_eval if m.get('bat_type') == '24V100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
+
+        st.subheader("3. Equipos Recomendados")
         
-        if not bluetti_rec and not must_rec:
+        if not bluetti_rec and not must_rec_48100 and not must_rec_48200 and not must_rec_24v:
             st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
         else:
+            # Resultado BLUETTI
             if bluetti_rec:
                 st.success(f"🟢 **BLUETTI:** {bluetti_rec['modelo']} ({bluetti_rec['w']} W continuos | {bluetti_rec['pico']} W pico | {bluetti_rec['wh_util']:.1f} Wh útiles)")
-            if must_rec:
-                st.warning(f"🟡 **MUST:** {must_rec['modelo']} ({must_rec['w']} W continuos | {must_rec['pico']} VA pico | {must_rec['wh_util']:.1f} Wh útiles)")
+                desplegar_fichas_tecnicas(bluetti_rec['fichas'], "bluetti")
+
+            # Resultado MUST - Sistema 24V EP30
+            if must_rec_24v:
+                st.warning(f"🟡 **MUST (Sistema 24V):** {must_rec_24v['modelo']} ({must_rec_24v['w']} W continuos | {must_rec_24v['pico']} VA pico | {must_rec_24v['wh_util']:.1f} Wh útiles)")
+                desplegar_fichas_tecnicas(must_rec_24v['fichas'], "must_24v")
+
+            # Resultado MUST - Opción A: Baterías LP16-48100 (100Ah)
+            if must_rec_48100:
+                st.warning(f"🟡 **MUST (Opción A / Baterías LP16-48100 — 100Ah):** {must_rec_48100['modelo']} ({must_rec_48100['w']} W continuos | {must_rec_48100['pico']} VA pico | {must_rec_48100['wh_util']:.1f} Wh útiles)")
+                desplegar_fichas_tecnicas(must_rec_48100['fichas'], "must_48100")
+
+            # Resultado MUST - Opción B: Baterías LP16-48200 (200Ah)
+            if must_rec_48200:
+                st.warning(f"🟡 **MUST (Opción B / Baterías LP16-48200 — 200Ah):** {must_rec_48200['modelo']} ({must_rec_48200['w']} W continuos | {must_rec_48200['pico']} VA pico | {must_rec_48200['wh_util']:.1f} Wh útiles)")
+                desplegar_fichas_tecnicas(must_rec_48200['fichas'], "must_48200")
