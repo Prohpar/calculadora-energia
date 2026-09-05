@@ -2,27 +2,27 @@ import streamlit as st
 import pandas as pd
 import base64
 import os
+import urllib.parse
+from fpdf import FPDF
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64 ---
+# --- FUNCIONES AUXILIARES PARA ARCHIVOS E IMÁGENES ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     return ""
 
-# --- CONFIGURACIÓN DE RUTAS DE IMÁGENES SEPARADAS ---
-IMAGEN_CABECERA = "logo_prodimic.png"  # Imagen que va arriba
-IMAGEN_FONDO = "fondo_agua.png"        # Nueva imagen para el fondo opaco
+IMAGEN_CABECERA = "logo_prodimic.png"
+IMAGEN_FONDO = "fondo_agua.png"
 
-# Convertir la imagen de fondo a Base64
 bg_b64 = get_base64_image(IMAGEN_FONDO)
 bg_style = f"data:image/png;base64,{bg_b64}" if bg_b64 else IMAGEN_FONDO
 
+# --- ESTILOS CSS ---
 st.markdown(f'''
 <style>
-/* Fondo en marca de agua usando IMAGEN_FONDO (Opacidad al 80%) */
 [data-testid="stAppViewContainer"]::before {{
     content: "";
     position: fixed;
@@ -34,12 +34,11 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.20;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
 
-/* --- REDUCCIÓN PRONUNCIADA ENTRE LOGO Y TÍTULO --- */
 div[data-testid="stImage"] {{
     margin-bottom: -2.8rem !important;
 }}
@@ -50,7 +49,6 @@ h1 {{
     margin-bottom: 0.2rem !important;
 }}
 
-/* Responsividad para móviles */
 @media (max-width: 640px) {{
     .block-container {{
         padding-left: 0.8rem !important;
@@ -64,11 +62,11 @@ h1 {{
 </style>
 ''', unsafe_allow_html=True)
 
-# --- CABECERA CON IMAGEN INDEPENDIENTE ---
+# --- CABECERA ---
 if os.path.exists(IMAGEN_CABECERA):
     st.image(IMAGEN_CABECERA, use_container_width=True)
 
-st.title("⚡Selección MUST & BLUETTI⚡")
+st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
 # Base de equipos completa
@@ -114,7 +112,7 @@ EQUIPOS_BASE = {
     'Aire acondicionado 10.000 BTU — convencional': {'w': 1000, 'arr': 3.0, 'v': 120, 'btu': 10000},
     'Aire acondicionado 10.000 BTU — inverter': {'w': 1000, 'arr': 1.5, 'v': 120, 'btu': 10000},
     
-    # Modelos 12.000 BTU desglosados por voltaje (120V y 220V)
+    # Modelos 12.000 BTU (120V y 220V)
     'Aire acondicionado 12.000 BTU (1 ton) 120V — convencional': {'w': 1200, 'arr': 3.0, 'v': 120, 'btu': 12000},
     'Aire acondicionado 12.000 BTU (1 ton) 120V — inverter': {'w': 1200, 'arr': 1.5, 'v': 120, 'btu': 12000},
     'Aire acondicionado 12.000 BTU (1 ton) 220V — convencional': {'w': 1200, 'arr': 3.0, 'v': 220, 'btu': 12000},
@@ -185,7 +183,6 @@ CATALOGO_BLUETTI = [
 # Catálogo MUST Generado Dinámicamente (DoD al 90%)
 CATALOGO_MUST = []
 
-# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah -> 2400Wh nominal * 0.90 DoD = 2160 Wh útiles por batería)
 FOR_MUST_24V_WH_UTIL_PER_BAT = 2400 * 0.90
 for n in range(1, 6):
     cant_str = f"{n}x " if n > 1 else ""
@@ -202,7 +199,6 @@ for n in range(1, 6):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías -> 5120Wh nominal * 0.90 DoD = 4608 Wh útiles por batería)
 FOR_MUST_48100_WH_UTIL_PER_BAT = 5120 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
@@ -219,7 +215,6 @@ for n in range(1, 11):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías -> 10240Wh nominal * 0.90 DoD = 9216 Wh útiles por batería)
 FOR_MUST_48200_WH_UTIL_PER_BAT = 10240 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
@@ -236,7 +231,6 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías -> 4608 Wh útiles por batería)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -252,7 +246,6 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías -> 9216 Wh útiles por batería)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -268,13 +261,88 @@ for n in range(1, 11):
         ]
     })
 
-# Ordenamiento por potencia y capacidad de energía ascendente
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN PARA MOSTRAR FICHAS TÉCNICAS Y BOTONES DE DESCARGA ---
+# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO ---
+def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    # Encabezado con Logo si existe
+    if os.path.exists(IMAGEN_CABECERA):
+        pdf.image(IMAGEN_CABECERA, x=10, y=8, w=50)
+        pdf.ln(12)
+    
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELÉCTRICO", ln=True, align="C")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 5, "Distribuidora Prodimic C.A. — Asesoría e Ingeniería Solar", ln=True, align="C")
+    pdf.ln(10)
+
+    # 1. Requerimientos Calculados
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "1. Resumen de Requerimientos del Cliente", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(60, 6, f"Potencia Continua: {w_req:.0f} W", border=1)
+    pdf.cell(60, 6, f"Energia Requerida: {wh_req:.0f} Wh", border=1)
+    pdf.cell(60, 6, f"Pico de Arranque: {pico_req:.0f} VA", border=1, ln=True)
+    pdf.ln(6)
+
+    # 2. Detalle de Cargas
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "2. Detalle de Equipos a Respaldar", ln=True)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(85, 6, "Equipo", border=1)
+    pdf.cell(20, 6, "Cant.", border=1, align="C")
+    pdf.cell(25, 6, "Pot. (W)", border=1, align="C")
+    pdf.cell(25, 6, "Horas", border=1, align="C")
+    pdf.cell(25, 6, "Energia (Wh)", border=1, align="C", ln=True)
+
+    pdf.set_font("Helvetica", "", 9)
+    for c in cargas:
+        w_tot = c['cant'] * c['w']
+        wh_tot = w_tot * c['horas'] * c['ciclo']
+        nombre_clean = c['equipo'].encode('latin-1', 'replace').decode('latin-1')
+        pdf.cell(85, 6, nombre_clean[:45], border=1)
+        pdf.cell(20, 6, str(c['cant']), border=1, align="C")
+        pdf.cell(25, 6, f"{w_tot:.0f}", border=1, align="C")
+        pdf.cell(25, 6, f"{c['horas']:.1f}", border=1, align="C")
+        pdf.cell(25, 6, f"{wh_tot:.0f}", border=1, align="C", ln=True)
+    
+    pdf.ln(8)
+
+    # 3. Equipos Recomendados
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "3. Sistemas de Respaldo Recomendados", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+
+    if bluetti_rec:
+        pct_w = min(w_req / bluetti_rec['w'], 1.0) * 100
+        pct_wh = min(wh_req / bluetti_rec['wh_util'], 1.0) * 100
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 6, f"Opción Estación Portátil BLUETTI: {bluetti_rec['modelo']}", ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 5, f"- Capacidad: {bluetti_rec['w']}W Continuos | {bluetti_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
+        pdf.ln(3)
+
+    if must_rec:
+        pct_w = min(w_req / must_rec['w'], 1.0) * 100
+        pct_wh = min(wh_req / must_rec['wh_util'], 1.0) * 100
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 6, f"Opción Sistema Estacionario MUST: {must_rec['modelo']}", ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 5, f"- Capacidad: {must_rec['w']}W Continuos | {must_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
+
+    pdf.ln(12)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Documento generado automáticamente para fines de cotización.", align="C")
+    
+    return bytes(pdf.output())
+
+# --- FUNCIÓN PARA MOSTRAR FICHAS TÉCNICAS ---
 def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
     extensiones = [".jpg", ".png", ".jpeg", ".pdf"]
-    
     for idx, item in enumerate(lista_fichas):
         nombre_comp = item["nombre"]
         base_path = item["base"]
@@ -311,10 +379,8 @@ def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
                         use_container_width=True,
                         key=f"{key_prefix}_{idx}_dl_pdf"
                     )
-        else:
-            st.caption(f"ℹ️ Ficha pendiente por cargar en GitHub: `{base_path}.jpg`")
 
-# --- RENDERIZADO COMPLETO POR CADA PROPUESTA (CARD + BARRAS % + FICHAS INMEDIATAS) ---
+# --- RENDERIZADO DE PROPUESTAS ---
 def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
     pct_w = min(w_req / rec['w'], 1.0)
     pct_wh = min(wh_req / rec['wh_util'], 1.0)
@@ -324,7 +390,6 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
     else:
         st.warning(f"🟡 **MUST (DoD 90%):** {rec['modelo']} ({rec['w']} W continuos | {rec['pico']} VA pico | {rec['wh_util']:.1f} Wh útiles)")
     
-    # Barras de porcentaje de potencia y energía
     col_b1, col_b2 = st.columns(2)
     with col_b1:
         st.caption(f"⚡ **Potencia:** {w_req:.0f} W / {rec['w']} W ({pct_w*100:.1f}%)")
@@ -333,23 +398,18 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
         st.caption(f"🔋 **Energía:** {wh_req:.0f} Wh / {rec['wh_util']:.1f} Wh ({pct_wh*100:.1f}%)")
         st.progress(pct_wh)
 
-    # Enlaces de descarga y visualización de fichas inmediatamente debajo
     desplegar_fichas_tecnicas(rec['fichas'], key_prefix)
     st.write("---")
 
 st.subheader("1. Selección de Cargas")
 
-# Inicialización de lista vacía
 if 'cargas' not in st.session_state:
     st.session_state.cargas = []
 
-# --- CONTENEDOR DE SELECCIÓN REACTIVO EN TIEMPO REAL ---
 with st.container(border=True):
     eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()), key="eq_select")
-    
     is_custom = (eq_sel == 'Otro / Personalizado')
     
-    # Despliegue dinámico e inmediato de campos si es personalizado
     if is_custom:
         col_c1, col_c2 = st.columns(2)
         w_custom = col_c1.number_input("Potencia en Vatios (W)", min_value=1, value=100, step=10, key="w_custom_in")
@@ -377,7 +437,6 @@ with st.container(border=True):
         })
         st.rerun()
 
-# --- EDICIÓN DIRECTA EN TARJETAS DE CARGA ---
 if st.session_state.cargas:
     st.write("### Lista de Cargas Seleccionadas")
     idx_eliminar = None
@@ -386,7 +445,6 @@ if st.session_state.cargas:
         with st.container(border=True):
             col_item1, col_item2, col_item3, col_item4 = st.columns([0.40, 0.22, 0.22, 0.16])
             
-            # Recalculamos valores locales por tarjeta
             w_tot_item = item['cant'] * item['w']
             wh_tot_item = w_tot_item * item['horas'] * item['ciclo']
             
@@ -394,7 +452,6 @@ if st.session_state.cargas:
                 st.markdown(f"**{item['equipo']}**")
                 st.caption(f"Subtotal: **{w_tot_item:.0f} W** | **{wh_tot_item:.0f} Wh**")
             
-            # Edición directa de Cantidad y Horas
             with col_item2:
                 item['cant'] = st.number_input("Cant.", min_value=1, value=int(item['cant']), key=f"edit_cant_{idx}")
             
@@ -402,7 +459,7 @@ if st.session_state.cargas:
                 item['horas'] = st.number_input("Horas", min_value=0.5, value=float(item['horas']), step=0.5, key=f"edit_horas_{idx}")
             
             with col_item4:
-                st.write("") # Espaciador
+                st.write("")
                 if st.button("🗑️", key=f"del_{idx}"):
                     idx_eliminar = idx
 
@@ -444,39 +501,30 @@ if st.session_state.cargas:
 
         st.subheader("3. Equipos Recomendados")
 
-        # --- EVALUACIÓN DE BLUETTI ---
         bluetti_rec = next(
             (b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), 
             None
         )
 
-        # --- EVALUACIÓN Y FILTRADO INTELIGENTE DE MUST ---
-        MIN_UTIL_W = 0.25  # Requerir al menos 25% de uso del inversor MUST
-
-        # Buscar candidatos MUST que cumplan cargas Y tengan un uso de potencia razonable (>= 25%)
+        MIN_UTIL_W = 0.25
         candidatos_must = [
             m for m in cat_must_eval 
             if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
             and (w_req / m['w']) >= MIN_UTIL_W
         ]
 
-        # Si no hay candidato con >= 25% pero tampoco existe BLUETTI, relajamos la restricción
         if not candidatos_must and not bluetti_rec:
             candidatos_must = [
                 m for m in cat_must_eval 
                 if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
             ]
 
-        # Seleccionar ÚNICAMENTE la combinación MUST más ajustada
         must_rec = candidatos_must[0] if candidatos_must else None
 
-        # --- REGLA EXCLUSIVA DE CARGAS LIVIANAS (< 1800W) ---
-        # Si la demanda es pequeña y BLUETTI satisface la carga, ocultar MUST si está muy sobredimensionado (< 35% de uso)
         if w_req <= 1800 and bluetti_rec and must_rec:
             if (w_req / must_rec['w']) < 0.35:
                 must_rec = None
 
-        # --- MOSTRAR RESULTADOS RECOMENDADOS ---
         if not bluetti_rec and not must_rec:
             st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
         else:
@@ -485,5 +533,40 @@ if st.session_state.cargas:
 
             if must_rec:
                 render_propuesta(must_rec, w_req, wh_req, "MUST", "must_optima")
+
+            # --- SECCIÓN 4: EXPORTACIÓN Y COMPARTIR ---
+            st.subheader("4. Exportar y Compartir Propuesta")
+            
+            col_exp1, col_exp2 = st.columns(2)
+
+            # Botón 1: Descarga de PDF
+            with col_exp1:
+                pdf_bytes = generar_pdf_propuesta(st.session_state.cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec)
+                st.download_button(
+                    label="📄 Descargar Propuesta en PDF",
+                    data=pdf_bytes,
+                    file_name="Propuesta_Respaldo_Prodimic.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    type="primary"
+                )
+
+            # Botón 2: Enlace a WhatsApp
+            with col_exp2:
+                msg_wa = f"⚡ *Cotización de Respaldo Eléctrico - Prodimic*\n\n"
+                msg_wa += f"📊 *Requerimientos:* {w_req:.0f}W Potencia | {wh_req:.0f}Wh Energía | {pico_req:.0f}VA Pico\n\n"
+                msg_wa += f"📋 *Cargas principales:*\n"
+                for item in st.session_state.cargas:
+                    msg_wa += f"• {item['cant']}x {item['equipo']} ({item['horas']}h uso)\n"
+                
+                msg_wa += "\n✅ *Equipos Recomendados:*\n"
+                if bluetti_rec:
+                    msg_wa += f"• BLUETTI: {bluetti_rec['modelo']}\n"
+                if must_rec:
+                    msg_wa += f"• MUST: {must_rec['modelo']}\n"
+                
+                wa_url = f"https://api.whatsapp.com/send?text={urllib.parse.quote(msg_wa)}"
+                st.link_button("📱 Compartir por WhatsApp", wa_url, use_container_width=True)
+
 else:
     st.info("💡 Selecciona y agrega equipos arriba para calcular la recomendación de respaldo.")
