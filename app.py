@@ -263,18 +263,18 @@ for n in range(1, 11):
 
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO CON ENCABEZADO ANCHO TOTAL ---
+# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO CON ENCABEZADO PEAGADO AL BORDE SUPERIOR ---
 def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # Encabezado de lado a lado (A4 = 210mm)
+    # Encabezado pegado exactamente al borde superior (y=0, x=0, ancho=210mm)
     if os.path.exists(IMAGEN_CABECERA):
         pdf.image(IMAGEN_CABECERA, x=0, y=0, w=210)
-        pdf.set_y(35)  # Espacio para que el contenido comience debajo de la imagen
+        pdf.set_y(25)  # El texto empieza justo al terminar el membrete
     else:
-        pdf.set_y(15)
+        pdf.set_y(10)
     
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELECTRICO", ln=True, align="C")
