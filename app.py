@@ -263,21 +263,23 @@ for n in range(1, 11):
 
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO (SIN ERRORES DE UNICODE) ---
+# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO CON ENCABEZADO ANCHO TOTAL ---
 def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # Encabezado con Logo si existe
+    # Encabezado de lado a lado (A4 = 210mm)
     if os.path.exists(IMAGEN_CABECERA):
-        pdf.image(IMAGEN_CABECERA, x=10, y=8, w=50)
-        pdf.ln(12)
+        pdf.image(IMAGEN_CABECERA, x=0, y=0, w=210)
+        pdf.set_y(35)  # Espacio para que el contenido comience debajo de la imagen
+    else:
+        pdf.set_y(15)
     
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELECTRICO", ln=True, align="C")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Asesoria e Ingenieria Solar", ln=True, align="C")
+    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Asesoria tecnica", ln=True, align="C")
     pdf.ln(10)
 
     # 1. Requerimientos Calculados
