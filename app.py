@@ -29,19 +29,20 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.80;
+    opacity: 0.20;
     pointer-events: none;
     z-index: 0;
 }}
 
-/* --- REDUCCIÓN DE ESPACIO ENTRE ENCABEZADO Y TÍTULO --- */
+/* --- REDUCCIÓN MÁS PRONUNCIADA ENTRE LOGO Y TÍTULO --- */
 div[data-testid="stImage"] {{
-    margin-bottom: -1.5rem !important;
+    margin-bottom: -2.8rem !important;
 }}
 
 h1 {{
-    margin-top: -1.0rem !important;
+    margin-top: -2.0rem !important;
     padding-top: 0rem !important;
+    margin-bottom: 0.2rem !important;
 }}
 
 /* Responsividad para móviles */
@@ -49,7 +50,7 @@ h1 {{
     .block-container {{
         padding-left: 0.8rem !important;
         padding-right: 0.8rem !important;
-        padding-top: 1rem !important;
+        padding-top: 0.5rem !important;
     }}
     h1 {{
         font-size: 1.5rem !important;
@@ -62,7 +63,7 @@ h1 {{
 if os.path.exists("logo_prodimic.png"):
     st.image("logo_prodimic.png", use_container_width=True)
 
-st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
+st.title("⚡Selección MUST & BLUETTI⚡")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
 # Base de equipos completa
