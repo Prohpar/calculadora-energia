@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- INYECCIÓN DE CSS PARA MARCA DE AGUA DE PRODIMIC AL 80% DE OPACIDAD ---
+# --- INYECCIÓN DE CSS PARA MARCA DE AGUA Y AJUSTE DE ESPACIADOS ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
@@ -34,6 +34,16 @@ st.markdown(f'''
     z-index: 0;
 }}
 
+/* --- REDUCCIÓN DE ESPACIO ENTRE ENCABEZADO Y TÍTULO --- */
+div[data-testid="stImage"] {{
+    margin-bottom: -1.5rem !important;
+}}
+
+h1 {{
+    margin-top: -1.0rem !important;
+    padding-top: 0rem !important;
+}}
+
 /* Responsividad para móviles */
 @media (max-width: 640px) {{
     .block-container {{
@@ -48,15 +58,18 @@ st.markdown(f'''
 </style>
 ''', unsafe_allow_html=True)
 
-# --- CABECERA CON LOGO DE PRODIMIC (Ancho total del contenedor) ---
+# --- CABECERA CON LOGO DE PRODIMIC ---
 if os.path.exists("logo_prodimic.png"):
     st.image("logo_prodimic.png", use_container_width=True)
 
-st.title("⚡Selección MUST & BLUETTI⚡")
+st.title("⚡Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
-# Base de equipos completa
+# Base de equipos completa (con opciones de iluminación de 4W, 9W, 12W y Opción Genérica)
 EQUIPOS_BASE = {
+    'Bombillo LED 4W': {'w': 4, 'arr': 1.0, 'v': 120, 'btu': 0},
+    'Bombillo LED 9W': {'w': 9, 'arr': 1.0, 'v': 120, 'btu': 0},
+    'Bombillo LED 12W': {'w': 12, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Bombillo LED 18W': {'w': 18, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Router / módem': {'w': 17, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Cargador de teléfono': {'w': 15, 'arr': 1.0, 'v': 120, 'btu': 0},
@@ -120,7 +133,7 @@ EQUIPOS_BASE = {
     'Aire acondicionado 54.000 BTU (4,5 ton) — inverter': {'w': 5400, 'arr': 1.5, 'v': 220, 'btu': 54000},
     'Aire acondicionado 60.000 BTU (5 ton) — convencional': {'w': 6000, 'arr': 3.0, 'v': 220, 'btu': 60000},
     'Aire acondicionado 60.000 BTU (5 ton) — inverter': {'w': 6000, 'arr': 1.5, 'v': 220, 'btu': 60000},
-    'Otro / manual': {'w': 0, 'arr': 1.0, 'v': 120, 'btu': 0}
+    'Otro / Personalizado': {'w': 0, 'arr': 1.0, 'v': 120, 'btu': 0}
 }
 
 # Catálogo BLUETTI
@@ -320,16 +333,18 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
 
 st.subheader("1. Selección de Cargas")
 
+# Se inicializa la lista vacía (sin pre-cargar equipos)
 if 'cargas' not in st.session_state:
-    st.session_state.cargas = [
-        {"equipo": "Nevera", "cant": 1, "w": 200, "arr": 3.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 0.5},
-        {"equipo": "Router / módem", "cant": 1, "w": 17, "arr": 1.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 1.0},
-        {"equipo": "Televisor LED 50\"", "cant": 1, "w": 90, "arr": 1.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 1.0},
-        {"equipo": "Bombillo LED 18W", "cant": 6, "w": 18, "arr": 1.0, "v": 120, "btu": 0, "horas": 4.0, "ciclo": 1.0},
-    ]
+    st.session_state.cargas = []
 
 with st.form("add_form"):
     eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()))
+    
+    is_custom = (eq_sel == 'Otro / Personalizado')
+    if is_custom:
+        w_custom = st.number_input("Ingrese la Potencia en Vatios (W)", min_value=1, value=100, step=10)
+        arr_custom = st.number_input("Factor de arranque (ej: 1.0 normal, 3.0 motores/neveras)", min_value=1.0, value=1.0, step=0.5)
+
     col_f1, col_f2 = st.columns(2)
     cant_in = col_f1.number_input("Cantidad", min_value=1, value=1)
     horas_in = col_f2.number_input("Horas uso", min_value=0.5, value=4.0, step=0.5)
@@ -337,16 +352,21 @@ with st.form("add_form"):
     submitted = st.form_submit_button("➕ Agregar a la Lista", use_container_width=True)
     if submitted:
         eq_data = EQUIPOS_BASE[eq_sel]
+        real_w = w_custom if is_custom else eq_data['w']
+        real_arr = arr_custom if is_custom else eq_data['arr']
+        nombre_equipo = f"Carga Personalizada ({real_w}W)" if is_custom else eq_sel
+
         st.session_state.cargas.append({
-            "equipo": eq_sel,
+            "equipo": nombre_equipo,
             "cant": cant_in,
-            "w": eq_data['w'],
-            "arr": eq_data['arr'],
+            "w": real_w,
+            "arr": real_arr,
             "v": eq_data['v'],
             "btu": eq_data['btu'],
             "horas": horas_in,
             "ciclo": 1.0
         })
+        st.rerun()
 
 if st.session_state.cargas:
     st.write("### Lista de Cargas Seleccionadas")
@@ -445,3 +465,5 @@ if st.session_state.cargas:
 
             if must_rec:
                 render_propuesta(must_rec, w_req, wh_req, "MUST", "must_optima")
+else:
+    st.info("💡 Selecciona y agrega equipos arriba para calcular la recomendación de respaldo.")
