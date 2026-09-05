@@ -29,7 +29,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.20;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
@@ -52,7 +52,7 @@ st.markdown(f'''
 if os.path.exists("logo_prodimic.png"):
     st.image("logo_prodimic.png", use_container_width=True)
 
-st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
+st.title("⚡Selección MUST & BLUETTI⚡")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
 
 # Base de equipos completa
@@ -402,25 +402,46 @@ if st.session_state.cargas:
             cat_bluetti_eval = CATALOGO_BLUETTI
             cat_must_eval = CATALOGO_MUST
 
-        bluetti_rec = next((b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), None)
-
-        must_rec_48100 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
-        must_rec_48200 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48200' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
-        must_rec_24v = next((m for m in cat_must_eval if m.get('bat_type') == '24V100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
-
         st.subheader("3. Equipos Recomendados")
-        
-        if not bluetti_rec and not must_rec_48100 and not must_rec_48200 and not must_rec_24v:
+
+        # --- EVALUACIÓN DE BLUETTI ---
+        bluetti_rec = next(
+            (b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), 
+            None
+        )
+
+        # --- EVALUACIÓN Y FILTRADO INTELIGENTE DE MUST ---
+        MIN_UTIL_W = 0.25  # Requerir al menos 25% de uso del inversor MUST
+
+        # Buscar candidatos MUST que cumplan cargas Y tengan un uso de potencia razonable (>= 25%)
+        candidatos_must = [
+            m for m in cat_must_eval 
+            if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
+            and (w_req / m['w']) >= MIN_UTIL_W
+        ]
+
+        # Si no hay candidato con >= 25% pero tampoco existe BLUETTI, relajamos la restricción
+        if not candidatos_must and not bluetti_rec:
+            candidatos_must = [
+                m for m in cat_must_eval 
+                if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
+            ]
+
+        # Seleccionar ÚNICAMENTE la combinación MUST más ajustada
+        must_rec = candidatos_must[0] if candidatos_must else None
+
+        # --- REGLA EXCLUSIVA DE CARGAS LIVIANAS (< 1800W) ---
+        # Si la demanda es pequeña y BLUETTI satisface la carga, ocultar MUST si está muy sobredimensionado (< 35% de uso)
+        if w_req <= 1800 and bluetti_rec and must_rec:
+            if (w_req / must_rec['w']) < 0.35:
+                must_rec = None
+
+        # --- MOSTRAR RESULTADOS RECOMENDADOS ---
+        if not bluetti_rec and not must_rec:
             st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
         else:
             if bluetti_rec:
                 render_propuesta(bluetti_rec, w_req, wh_req, "BLUETTI", "bluetti")
 
-            if must_rec_24v:
-                render_propuesta(must_rec_24v, w_req, wh_req, "MUST", "must_24v")
-
-            if must_rec_48100:
-                render_propuesta(must_rec_48100, w_req, wh_req, "MUST", "must_48100")
-
-            if must_rec_48200:
-                render_propuesta(must_rec_48200, w_req, wh_req, "MUST", "must_48200")
+            if must_rec:
+                render_propuesta(must_rec, w_req, wh_req, "MUST", "must_optima")
