@@ -4,6 +4,7 @@ import base64
 import os
 import urllib.parse
 from fpdf import FPDF
+from PIL import Image
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
@@ -62,7 +63,7 @@ h1 {{
 </style>
 ''', unsafe_allow_html=True)
 
-# --- CABECERA ---
+# --- CABECERA EN PANTALLA ---
 if os.path.exists(IMAGEN_CABECERA):
     st.image(IMAGEN_CABECERA, use_container_width=True)
 
@@ -263,18 +264,36 @@ for n in range(1, 11):
 
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO CON ENCABEZADO PEAGADO AL BORDE SUPERIOR ---
+# --- FUNCIÓN PARA GENERAR IMAGEN CON OPACIDAD DEL 30% PARA EL PDF ---
+def obtener_marca_agua_pdf(opacidad=0.30):
+    ruta = IMAGEN_FONDO if os.path.exists(IMAGEN_FONDO) else (IMAGEN_CABECERA if os.path.exists(IMAGEN_CABECERA) else None)
+    if not ruta:
+        return None
+    try:
+        img = Image.open(ruta).convert("RGBA")
+        white_bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
+        r, g, b, a = img.split()
+        a = a.point(lambda p: int(p * opacidad))
+        img.putalpha(a)
+        blended = Image.alpha_composite(white_bg, img).convert("RGB")
+        temp_path = "temp_marca_agua_pdf.png"
+        blended.save(temp_path, "PNG")
+        return temp_path
+    except Exception:
+        return None
+
+# --- FUNCIÓN GENERADORA DE PDF CON MARCA DE AGUA CENTRADA ---
 def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # Encabezado pegado exactamente al borde superior (y=0, x=0, ancho=210mm)
-    if os.path.exists(IMAGEN_CABECERA):
-        pdf.image(IMAGEN_CABECERA, x=0, y=0, w=210)
-        pdf.set_y(25)  # El texto empieza justo al terminar el membrete
-    else:
-        pdf.set_y(10)
+    # Marca de agua centrada en el documento con 30% de opacidad
+    wm_file = obtener_marca_agua_pdf(opacidad=0.30)
+    if wm_file and os.path.exists(wm_file):
+        pdf.image(wm_file, x=35, y=75, w=140)
+
+    pdf.set_y(15)
     
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELECTRICO", ln=True, align="C")
