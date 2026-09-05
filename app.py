@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- INYECCIÓN DE CSS PARA MARCA DE AGUA DE PRODIMIC AL 50% DE OPACIDAD ---
+# --- INYECCIÓN DE CSS PARA MARCA DE AGUA DE PRODIMIC AL 80% DE OPACIDAD ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
@@ -15,9 +15,9 @@ def get_base64_image(image_path):
 logo_b64 = get_base64_image("logo_prodimic.png")
 bg_style = f"data:image/png;base64,{logo_b64}" if logo_b64 else "logo_prodimic.png"
 
-st.markdown(f"""
+st.markdown(f'''
 <style>
-/* Fondo en marca de agua (50% opacidad) */
+/* Fondo en marca de agua (Opacidad al 80%) */
 [data-testid="stAppViewContainer"]::before {{
     content: "";
     position: fixed;
@@ -29,7 +29,7 @@ st.markdown(f"""
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.50;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
@@ -46,11 +46,11 @@ st.markdown(f"""
     }}
 }}
 </style>
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
 
-# --- CABECERA CON LOGO DE PRODIMIC ---
+# --- CABECERA CON LOGO DE PRODIMIC (Ancho total del contenedor) ---
 if os.path.exists("logo_prodimic.png"):
-    st.image("logo_prodimic.png", width=250)
+    st.image("logo_prodimic.png", use_container_width=True)
 
 st.title("⚡ Calculador de Respaldo MUST & BLUETTI")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
@@ -166,7 +166,7 @@ CATALOGO_BLUETTI = [
 # Catálogo MUST Generado Dinámicamente (DoD al 90%)
 CATALOGO_MUST = []
 
-# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah -> 2400Wh nominal * 0.90 DoD = 2160 Wh útiles por bat)
+# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah -> 2400Wh nominal * 0.90 DoD = 2160 Wh útiles por batería)
 FOR_MUST_24V_WH_UTIL_PER_BAT = 2400 * 0.90
 for n in range(1, 6):
     cant_str = f"{n}x " if n > 1 else ""
@@ -183,7 +183,7 @@ for n in range(1, 6):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías -> 5120Wh nominal * 0.90 DoD = 4608 Wh útiles por bat)
+# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías -> 5120Wh nominal * 0.90 DoD = 4608 Wh útiles por batería)
 FOR_MUST_48100_WH_UTIL_PER_BAT = 5120 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
@@ -200,7 +200,7 @@ for n in range(1, 11):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías -> 10240Wh nominal * 0.90 DoD = 9216 Wh útiles por bat)
+# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías -> 10240Wh nominal * 0.90 DoD = 9216 Wh útiles por batería)
 FOR_MUST_48200_WH_UTIL_PER_BAT = 10240 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
@@ -217,7 +217,7 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías -> 4608 Wh útiles por bat)
+# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías -> 4608 Wh útiles por batería)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -233,7 +233,7 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías -> 9216 Wh útiles por bat)
+# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías -> 9216 Wh útiles por batería)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -295,7 +295,7 @@ def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
         else:
             st.caption(f"ℹ️ Ficha pendiente por cargar en GitHub: `{base_path}.jpg`")
 
-# --- RENDERIZADO COMPLETO POR CADA PROPUESTA (CARD + BARRAS % + FICHAS) ---
+# --- RENDERIZADO COMPLETO POR CADA PROPUESTA (CARD + BARRAS % + FICHAS INMEDIATAS) ---
 def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
     pct_w = min(w_req / rec['w'], 1.0)
     pct_wh = min(wh_req / rec['wh_util'], 1.0)
