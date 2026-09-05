@@ -263,7 +263,7 @@ for n in range(1, 11):
 
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO ---
+# --- FUNCIÓN GENERADORA DE PDF MEMBRETADO (SIN ERRORES DE UNICODE) ---
 def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
     pdf = FPDF()
     pdf.add_page()
@@ -275,9 +275,9 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pdf.ln(12)
     
     pdf.set_font("Helvetica", "B", 16)
-    pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELÉCTRICO", ln=True, align="C")
+    pdf.cell(0, 10, "PROPUESTA DE RESPALDO ELECTRICO", ln=True, align="C")
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 5, "Distribuidora Prodimic C.A. — Asesoría e Ingeniería Solar", ln=True, align="C")
+    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Asesoria e Ingenieria Solar", ln=True, align="C")
     pdf.ln(10)
 
     # 1. Requerimientos Calculados
@@ -303,7 +303,7 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
     for c in cargas:
         w_tot = c['cant'] * c['w']
         wh_tot = w_tot * c['horas'] * c['ciclo']
-        nombre_clean = c['equipo'].encode('latin-1', 'replace').decode('latin-1')
+        nombre_clean = c['equipo'].encode('latin-1', 'replace').decode('latin-1').replace('?', '')
         pdf.cell(85, 6, nombre_clean[:45], border=1)
         pdf.cell(20, 6, str(c['cant']), border=1, align="C")
         pdf.cell(25, 6, f"{w_tot:.0f}", border=1, align="C")
@@ -321,7 +321,7 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pct_w = min(w_req / bluetti_rec['w'], 1.0) * 100
         pct_wh = min(wh_req / bluetti_rec['wh_util'], 1.0) * 100
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 6, f"Opción Estación Portátil BLUETTI: {bluetti_rec['modelo']}", ln=True)
+        pdf.cell(0, 6, f"Opcion Estacion Portatil BLUETTI: {bluetti_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
         pdf.cell(0, 5, f"- Capacidad: {bluetti_rec['w']}W Continuos | {bluetti_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
         pdf.ln(3)
@@ -330,13 +330,13 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pct_w = min(w_req / must_rec['w'], 1.0) * 100
         pct_wh = min(wh_req / must_rec['wh_util'], 1.0) * 100
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 6, f"Opción Sistema Estacionario MUST: {must_rec['modelo']}", ln=True)
+        pdf.cell(0, 6, f"Opcion Sistema Estacionario MUST: {must_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
         pdf.cell(0, 5, f"- Capacidad: {must_rec['w']}W Continuos | {must_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
 
     pdf.ln(12)
     pdf.set_font("Helvetica", "I", 8)
-    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Documento generado automáticamente para fines de cotización.", align="C")
+    pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Documento generado automaticamente para fines de cotizacion.", align="C")
     
     return bytes(pdf.output())
 
