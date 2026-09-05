@@ -29,7 +29,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.80;
+    opacity: 0.20;
     pointer-events: none;
     z-index: 0;
 }}
