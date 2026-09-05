@@ -5,19 +5,24 @@ import os
 
 st.set_page_config(page_title="Calculador MUST & BLUETTI", page_icon="⚡", layout="centered")
 
-# --- INYECCIÓN DE CSS PARA MARCA DE AGUA Y AJUSTE DE ESPACIADOS ---
+# --- FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64 ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     return ""
 
-logo_b64 = get_base64_image("logo_prodimic.png")
-bg_style = f"data:image/png;base64,{logo_b64}" if logo_b64 else "logo_prodimic.png"
+# --- CONFIGURACIÓN DE RUTAS DE IMÁGENES SEPARADAS ---
+IMAGEN_CABECERA = "logo_prodimic.png"  # Imagen que va arriba
+IMAGEN_FONDO = "fondo_agua.png"        # Nueva imagen para el fondo opaco
+
+# Convertir la imagen de fondo a Base64
+bg_b64 = get_base64_image(IMAGEN_FONDO)
+bg_style = f"data:image/png;base64,{bg_b64}" if bg_b64 else IMAGEN_FONDO
 
 st.markdown(f'''
 <style>
-/* Fondo en marca de agua (Opacidad al 80%) */
+/* Fondo en marca de agua usando IMAGEN_FONDO (Opacidad al 80%) */
 [data-testid="stAppViewContainer"]::before {{
     content: "";
     position: fixed;
@@ -34,7 +39,7 @@ st.markdown(f'''
     z-index: 0;
 }}
 
-/* --- REDUCCIÓN MÁS PRONUNCIADA ENTRE LOGO Y TÍTULO --- */
+/* --- REDUCCIÓN PRONUNCIADA ENTRE LOGO Y TÍTULO --- */
 div[data-testid="stImage"] {{
     margin-bottom: -2.8rem !important;
 }}
@@ -59,9 +64,9 @@ h1 {{
 </style>
 ''', unsafe_allow_html=True)
 
-# --- CABECERA CON LOGO DE PRODIMIC ---
-if os.path.exists("logo_prodimic.png"):
-    st.image("logo_prodimic.png", use_container_width=True)
+# --- CABECERA CON IMAGEN INDEPENDIENTE ---
+if os.path.exists(IMAGEN_CABECERA):
+    st.image(IMAGEN_CABECERA, use_container_width=True)
 
 st.title("⚡Selección MUST & BLUETTI⚡")
 st.caption("Distribuidora Prodimic — Dimensionamiento directo de potencia, energía y picos de arranque.")
@@ -338,7 +343,7 @@ st.subheader("1. Selección de Cargas")
 if 'cargas' not in st.session_state:
     st.session_state.cargas = []
 
-# --- CONTENEDOR DE SELECCIÓN REACTIVO EN TIEMPO REAL (SIN FORMULARIO) ---
+# --- CONTENEDOR DE SELECCIÓN REACTIVO EN TIEMPO REAL ---
 with st.container(border=True):
     eq_sel = st.selectbox("Seleccione Equipo", list(EQUIPOS_BASE.keys()), key="eq_select")
     
@@ -372,21 +377,32 @@ with st.container(border=True):
         })
         st.rerun()
 
+# --- EDICIÓN DIRECTA EN TARJETAS DE CARGA ---
 if st.session_state.cargas:
     st.write("### Lista de Cargas Seleccionadas")
     idx_eliminar = None
 
     for idx, item in enumerate(st.session_state.cargas):
-        w_tot = item['cant'] * item['w']
-        wh_tot = w_tot * item['horas'] * item['ciclo']
-        
         with st.container(border=True):
-            c_card1, c_card2 = st.columns([0.82, 0.18])
-            with c_card1:
+            col_item1, col_item2, col_item3, col_item4 = st.columns([0.40, 0.22, 0.22, 0.16])
+            
+            # Recalculamos valores locales por tarjeta
+            w_tot_item = item['cant'] * item['w']
+            wh_tot_item = w_tot_item * item['horas'] * item['ciclo']
+            
+            with col_item1:
                 st.markdown(f"**{item['equipo']}**")
-                st.caption(f"Cantidad: **{item['cant']}** | Potencia: **{w_tot} W**")
-                st.caption(f"Uso: **{item['horas']} h** | Energía: **{wh_tot:.0f} Wh**")
-            with c_card2:
+                st.caption(f"Subtotal: **{w_tot_item:.0f} W** | **{wh_tot_item:.0f} Wh**")
+            
+            # Edición directa de Cantidad y Horas
+            with col_item2:
+                item['cant'] = st.number_input("Cant.", min_value=1, value=int(item['cant']), key=f"edit_cant_{idx}")
+            
+            with col_item3:
+                item['horas'] = st.number_input("Horas", min_value=0.5, value=float(item['horas']), step=0.5, key=f"edit_horas_{idx}")
+            
+            with col_item4:
+                st.write("") # Espaciador
                 if st.button("🗑️", key=f"del_{idx}"):
                     idx_eliminar = idx
 
