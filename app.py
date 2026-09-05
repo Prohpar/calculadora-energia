@@ -163,17 +163,18 @@ CATALOGO_BLUETTI = [
      ]},
 ]
 
-# Catálogo MUST Generado Dinámicamente (Ambas baterías LP16 comparten la ficha "fichas/must_lp16")
+# Catálogo MUST Generado Dinámicamente (DoD al 90%)
 CATALOGO_MUST = []
 
-# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah)
+# EP30-3024 LV2 (1 a 5 baterías de 24V 100Ah -> 2400Wh nominal * 0.90 DoD = 2160 Wh útiles por bat)
+FOR_MUST_24V_WH_UTIL_PER_BAT = 2400 * 0.90
 for n in range(1, 6):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"EP30-3024 LV2 + {cant_str}batería 24V 100Ah",
         "w": 3000,
         "pico": 9000,
-        "wh_util": round(1843.2 * n, 1),
+        "wh_util": round(FOR_MUST_24V_WH_UTIL_PER_BAT * n, 1),
         "v220": False,
         "bat_type": "24V100",
         "fichas": [
@@ -182,14 +183,15 @@ for n in range(1, 6):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías)
+# PV33-6048 TLV (6000W) con LP16-48100 (1 a 10 baterías -> 5120Wh nominal * 0.90 DoD = 4608 Wh útiles por bat)
+FOR_MUST_48100_WH_UTIL_PER_BAT = 5120 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV33-6048 TLV + {cant_str}LP16-48100",
         "w": 6000,
         "pico": 12000,
-        "wh_util": round(3686.4 * n, 1),
+        "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48100",
         "fichas": [
@@ -198,14 +200,15 @@ for n in range(1, 11):
         ]
     })
 
-# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías)
+# PV33-6048 TLV (6000W) con LP16-48200 (1 a 10 baterías -> 10240Wh nominal * 0.90 DoD = 9216 Wh útiles por bat)
+FOR_MUST_48200_WH_UTIL_PER_BAT = 10240 * 0.90
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV33-6048 TLV + {cant_str}LP16-48200",
         "w": 6000,
         "pico": 12000,
-        "wh_util": round(7372.8 * n, 1),
+        "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48200",
         "fichas": [
@@ -214,14 +217,14 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías)
+# PV39-12048 TLV (12000W) con LP16-48100 (1 a 10 baterías -> 4608 Wh útiles por bat)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV39-12048 TLV + {cant_str}LP16-48100",
         "w": 12000,
         "pico": 36000,
-        "wh_util": round(3686.4 * n, 1),
+        "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48100",
         "fichas": [
@@ -230,14 +233,14 @@ for n in range(1, 11):
         ]
     })
 
-# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías)
+# PV39-12048 TLV (12000W) con LP16-48200 (1 a 10 baterías -> 9216 Wh útiles por bat)
 for n in range(1, 11):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV39-12048 TLV + {cant_str}LP16-48200",
         "w": 12000,
         "pico": 36000,
-        "wh_util": round(7372.8 * n, 1),
+        "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48200",
         "fichas": [
@@ -249,7 +252,7 @@ for n in range(1, 11):
 # Ordenamiento por potencia y capacidad de energía ascendente
 CATALOGO_MUST.sort(key=lambda x: (x['w'], x['wh_util']))
 
-# --- FUNCIÓN PARA DESPLEGAR MÚLTIPLES FICHAS TÉCNICAS POR COMBO ---
+# --- FUNCIÓN PARA MOSTRAR FICHAS TÉCNICAS Y BOTONES DE DESCARGA ---
 def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
     extensiones = [".jpg", ".png", ".jpeg", ".pdf"]
     
@@ -289,6 +292,31 @@ def desplegar_fichas_tecnicas(lista_fichas, key_prefix):
                         use_container_width=True,
                         key=f"{key_prefix}_{idx}_dl_pdf"
                     )
+        else:
+            st.caption(f"ℹ️ Ficha pendiente por cargar en GitHub: `{base_path}.jpg`")
+
+# --- RENDERIZADO COMPLETO POR CADA PROPUESTA (CARD + BARRAS % + FICHAS) ---
+def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
+    pct_w = min(w_req / rec['w'], 1.0)
+    pct_wh = min(wh_req / rec['wh_util'], 1.0)
+    
+    if tipo_marca == "BLUETTI":
+        st.success(f"🟢 **BLUETTI:** {rec['modelo']} ({rec['w']} W continuos | {rec['pico']} W pico | {rec['wh_util']:.1f} Wh útiles)")
+    else:
+        st.warning(f"🟡 **MUST (DoD 90%):** {rec['modelo']} ({rec['w']} W continuos | {rec['pico']} VA pico | {rec['wh_util']:.1f} Wh útiles)")
+    
+    # Barras de porcentaje de potencia y energía
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        st.caption(f"⚡ **Potencia:** {w_req:.0f} W / {rec['w']} W ({pct_w*100:.1f}%)")
+        st.progress(pct_w)
+    with col_b2:
+        st.caption(f"🔋 **Energía:** {wh_req:.0f} Wh / {rec['wh_util']:.1f} Wh ({pct_wh*100:.1f}%)")
+        st.progress(pct_wh)
+
+    # Enlaces de descarga y visualización de fichas inmediatamente debajo
+    desplegar_fichas_tecnicas(rec['fichas'], key_prefix)
+    st.write("---")
 
 st.subheader("1. Selección de Cargas")
 
@@ -376,7 +404,6 @@ if st.session_state.cargas:
 
         bluetti_rec = next((b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), None)
 
-        # Evaluaciones independientes para MUST
         must_rec_48100 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
         must_rec_48200 = next((m for m in cat_must_eval if m.get('bat_type') == 'LP16-48200' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
         must_rec_24v = next((m for m in cat_must_eval if m.get('bat_type') == '24V100' and m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req), None)
@@ -386,22 +413,14 @@ if st.session_state.cargas:
         if not bluetti_rec and not must_rec_48100 and not must_rec_48200 and not must_rec_24v:
             st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
         else:
-            # Resultado BLUETTI
             if bluetti_rec:
-                st.success(f"🟢 **BLUETTI:** {bluetti_rec['modelo']} ({bluetti_rec['w']} W continuos | {bluetti_rec['pico']} W pico | {bluetti_rec['wh_util']:.1f} Wh útiles)")
-                desplegar_fichas_tecnicas(bluetti_rec['fichas'], "bluetti")
+                render_propuesta(bluetti_rec, w_req, wh_req, "BLUETTI", "bluetti")
 
-            # Resultado MUST - Sistema 24V EP30
             if must_rec_24v:
-                st.warning(f"🟡 **MUST (Sistema 24V):** {must_rec_24v['modelo']} ({must_rec_24v['w']} W continuos | {must_rec_24v['pico']} VA pico | {must_rec_24v['wh_util']:.1f} Wh útiles)")
-                desplegar_fichas_tecnicas(must_rec_24v['fichas'], "must_24v")
+                render_propuesta(must_rec_24v, w_req, wh_req, "MUST", "must_24v")
 
-            # Resultado MUST - Opción A: Baterías LP16-48100 (100Ah)
             if must_rec_48100:
-                st.warning(f"🟡 **MUST (Opción A / Baterías LP16-48100 — 100Ah):** {must_rec_48100['modelo']} ({must_rec_48100['w']} W continuos | {must_rec_48100['pico']} VA pico | {must_rec_48100['wh_util']:.1f} Wh útiles)")
-                desplegar_fichas_tecnicas(must_rec_48100['fichas'], "must_48100")
+                render_propuesta(must_rec_48100, w_req, wh_req, "MUST", "must_48100")
 
-            # Resultado MUST - Opción B: Baterías LP16-48200 (200Ah)
             if must_rec_48200:
-                st.warning(f"🟡 **MUST (Opción B / Baterías LP16-48200 — 200Ah):** {must_rec_48200['modelo']} ({must_rec_48200['w']} W continuos | {must_rec_48200['pico']} VA pico | {must_rec_48200['wh_util']:.1f} Wh útiles)")
-                desplegar_fichas_tecnicas(must_rec_48200['fichas'], "must_48200")
+                render_propuesta(must_rec_48200, w_req, wh_req, "MUST", "must_48200")
