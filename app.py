@@ -35,7 +35,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.80;
+    opacity: 0.20;
     pointer-events: none;
     z-index: 0;
 }}
@@ -82,7 +82,7 @@ EQUIPOS_BASE = {
     'Impresora de tinta': {'w': 30, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Sistema CCTV': {'w': 60, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Laptop': {'w': 65, 'arr': 1.0, 'v': 120, 'btu': 0},
-    'Ventilador': {'w': 80, 'arr': 2.0, 'v': 120, 'btu': 0},
+    'Ventilador': {'w': 80, 'arr': 1.2, 'v': 120, 'btu': 0},
     'Televisor LED 32"': {'w': 45, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Televisor LED 40" / 43"': {'w': 65, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Televisor LED 50"': {'w': 90, 'arr': 1.0, 'v': 120, 'btu': 0},
