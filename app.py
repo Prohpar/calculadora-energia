@@ -403,10 +403,10 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
     
     col_b1, col_b2 = st.columns(2)
     with col_b1:
-        st.caption(f"⚡ **Potencia:** {w_req:.0f} W / {rec['w']} W ({pct_w*100:.1f}%)")
+        st.caption(f"⚡ **Potencia:** {pct_w*100:.1f}%")
         st.progress(pct_w)
     with col_b2:
-        st.caption(f"🔋 **Energía:** {wh_req:.0f} Wh / {rec['wh_util']:.1f} Wh ({pct_wh*100:.1f}%)")
+        st.caption(f"🔋 **Energía:** {pct_wh*100:.1f}%")
         st.progress(pct_wh)
 
     desplegar_fichas_tecnicas(rec['fichas'], key_prefix)
