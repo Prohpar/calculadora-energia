@@ -334,7 +334,7 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(0, 6, f"Opcion Estacion Portatil BLUETTI: {bluetti_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 5, f"- Capacidad: {bluetti_rec['w']}W Continuos | {bluetti_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
+        pdf.cell(0, 5, f"- Capacidad: {bluetti_rec['w']}W Continuos | {bluetti_rec['wh_util']:.0f}Wh Utiles", ln=True)
         pdf.ln(3)
 
     if must_rec:
@@ -343,7 +343,7 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(0, 6, f"Opcion Sistema Estacionario MUST: {must_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 5, f"- Capacidad: {must_rec['w']}W Continuos | {must_rec['wh_util']:.0f}Wh Utiles | Uso Potencia: {pct_w:.1f}% | Uso Energia: {pct_wh:.1f}%", ln=True)
+        pdf.cell(0, 5, f"- Capacidad: {must_rec['w']}W Continuos | {must_rec['wh_util']:.0f}Wh Utiles", ln=True)
 
     pdf.ln(12)
     pdf.set_font("Helvetica", "I", 8)
@@ -403,10 +403,10 @@ def render_propuesta(rec, w_req, wh_req, tipo_marca, key_prefix):
     
     col_b1, col_b2 = st.columns(2)
     with col_b1:
-        st.caption(f"⚡ **Potencia:** {pct_w*100:.1f}%")
+        st.caption("⚡ **Potencia**")
         st.progress(pct_w)
     with col_b2:
-        st.caption(f"🔋 **Energía:** {pct_wh*100:.1f}%")
+        st.caption("🔋 **Energía**")
         st.progress(pct_wh)
 
     desplegar_fichas_tecnicas(rec['fichas'], key_prefix)
