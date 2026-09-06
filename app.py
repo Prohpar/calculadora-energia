@@ -35,7 +35,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.20;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
@@ -82,7 +82,7 @@ EQUIPOS_BASE = {
     'Impresora de tinta': {'w': 30, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Sistema CCTV': {'w': 60, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Laptop': {'w': 65, 'arr': 1.0, 'v': 120, 'btu': 0},
-    'Ventilador': {'w': 80, 'arr': 1.2, 'v': 120, 'btu': 0},
+    'Ventilador': {'w': 80, 'arr': 2.0, 'v': 120, 'btu': 0},
     'Televisor LED 32"': {'w': 45, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Televisor LED 40" / 43"': {'w': 65, 'arr': 1.0, 'v': 120, 'btu': 0},
     'Televisor LED 50"': {'w': 90, 'arr': 1.0, 'v': 120, 'btu': 0},
@@ -288,7 +288,6 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # Marca de agua centrada en el documento con 30% de opacidad
     wm_file = obtener_marca_agua_pdf(opacidad=0.30)
     if wm_file and os.path.exists(wm_file):
         pdf.image(wm_file, x=35, y=75, w=140)
@@ -301,18 +300,9 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
     pdf.cell(0, 5, "Distribuidora Prodimic C.A. - Asesoria tecnica", ln=True, align="C")
     pdf.ln(10)
 
-    # 1. Requerimientos Calculados
+    # 1. Detalle de Cargas
     pdf.set_font("Helvetica", "B", 12)
-    pdf.cell(0, 8, "1. Resumen de Requerimientos del Cliente", ln=True)
-    pdf.set_font("Helvetica", "", 10)
-    pdf.cell(60, 6, f"Potencia Continua: {w_req:.0f} W", border=1)
-    pdf.cell(60, 6, f"Energia Requerida: {wh_req:.0f} Wh", border=1)
-    pdf.cell(60, 6, f"Pico de Arranque: {pico_req:.0f} VA", border=1, ln=True)
-    pdf.ln(6)
-
-    # 2. Detalle de Cargas
-    pdf.set_font("Helvetica", "B", 12)
-    pdf.cell(0, 8, "2. Detalle de Equipos a Respaldar", ln=True)
+    pdf.cell(0, 8, "1. Detalle de Equipos a Respaldar", ln=True)
     pdf.set_font("Helvetica", "B", 9)
     pdf.cell(85, 6, "Equipo", border=1)
     pdf.cell(20, 6, "Cant.", border=1, align="C")
@@ -333,9 +323,9 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
     
     pdf.ln(8)
 
-    # 3. Equipos Recomendados
+    # 2. Equipos Recomendados
     pdf.set_font("Helvetica", "B", 12)
-    pdf.cell(0, 8, "3. Sistemas de Respaldo Recomendados", ln=True)
+    pdf.cell(0, 8, "2. Sistemas de Respaldo Recomendados", ln=True)
     pdf.set_font("Helvetica", "", 10)
 
     if bluetti_rec:
@@ -506,12 +496,6 @@ if st.session_state.cargas:
 
         requiere_alta_capacidad = any(item.get('v') == 220 or item.get('btu', 0) > 12000 for item in st.session_state.cargas)
 
-        st.subheader("2. Requerimientos Netos")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Potencia", f"{w_req:.0f} W")
-        col2.metric("Energía", f"{wh_req:.0f} Wh")
-        col3.metric("Pico", f"{pico_req:.0f} VA")
-
         if requiere_alta_capacidad:
             st.info("⚡ **Filtro 220V / Carga Comercial:** Búsqueda limitada a Apex 300, PV33 y PV39.")
             cat_bluetti_eval = [b for b in CATALOGO_BLUETTI if b['v220']]
@@ -520,7 +504,7 @@ if st.session_state.cargas:
             cat_bluetti_eval = CATALOGO_BLUETTI
             cat_must_eval = CATALOGO_MUST
 
-        st.subheader("3. Equipos Recomendados")
+        st.subheader("2. Equipos Recomendados")
 
         bluetti_rec = next(
             (b for b in cat_bluetti_eval if b['w'] >= w_req and b['wh_util'] >= wh_req and b['pico'] >= pico_req), 
@@ -555,8 +539,8 @@ if st.session_state.cargas:
             if must_rec:
                 render_propuesta(must_rec, w_req, wh_req, "MUST", "must_optima")
 
-            # --- SECCIÓN 4: EXPORTACIÓN Y COMPARTIR ---
-            st.subheader("4. Exportar y Compartir Propuesta")
+            # --- SECCIÓN 3: EXPORTACIÓN Y COMPARTIR ---
+            st.subheader("3. Exportar y Compartir Propuesta")
             
             col_exp1, col_exp2 = st.columns(2)
 
@@ -575,7 +559,6 @@ if st.session_state.cargas:
             # Botón 2: Enlace a WhatsApp
             with col_exp2:
                 msg_wa = f"⚡ *Cotización de Respaldo Eléctrico - Prodimic*\n\n"
-                msg_wa += f"📊 *Requerimientos:* {w_req:.0f}W Potencia | {wh_req:.0f}Wh Energía | {pico_req:.0f}VA Pico\n\n"
                 msg_wa += f"📋 *Cargas principales:*\n"
                 for item in st.session_state.cargas:
                     msg_wa += f"• {item['cant']}x {item['equipo']} ({item['horas']}h uso)\n"
