@@ -435,9 +435,10 @@ with st.container(border=True):
     is_custom = (eq_sel == 'Otro / Personalizado')
     
     if is_custom:
-        col_c1, col_c2 = st.columns(2)
+        col_c1, col_c2, col_c3 = st.columns(3)
         w_custom = col_c1.number_input("Potencia en Vatios (W)", min_value=1, value=100, step=10, key="w_custom_in")
-        arr_custom = col_c2.number_input("Factor de arranque (1.0 normal, 3.0 neveras)", min_value=1.0, value=1.0, step=0.5, key="arr_custom_in")
+        arr_custom = col_c2.number_input("Factor de arranque", min_value=1.0, value=1.0, step=0.5, key="arr_custom_in")
+        v_custom = col_c3.selectbox("Voltaje (V)", [120, 220], key="v_custom_in")
 
     col_f1, col_f2 = st.columns(2)
     cant_in = col_f1.number_input("Cantidad", min_value=1, value=1, key="cant_in")
@@ -447,14 +448,15 @@ with st.container(border=True):
         eq_data = EQUIPOS_BASE[eq_sel]
         real_w = w_custom if is_custom else eq_data['w']
         real_arr = arr_custom if is_custom else eq_data['arr']
-        nombre_equipo = f"Carga Personalizada ({real_w}W)" if is_custom else eq_sel
+        real_v = v_custom if is_custom else eq_data['v']
+        nombre_equipo = f"Carga Personalizada ({real_w}W - {real_v}V)" if is_custom else eq_sel
 
         st.session_state.cargas.append({
             "equipo": nombre_equipo,
             "cant": cant_in,
             "w": real_w,
             "arr": real_arr,
-            "v": eq_data['v'],
+            "v": real_v,
             "btu": eq_data['btu'],
             "horas": horas_in,
             "ciclo": 1.0
