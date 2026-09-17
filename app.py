@@ -35,7 +35,7 @@ st.markdown(f'''
     background-repeat: no-repeat;
     background-position: center 40%;
     background-size: 65% auto;
-    opacity: 0.20;
+    opacity: 0.80;
     pointer-events: none;
     z-index: 0;
 }}
@@ -184,8 +184,9 @@ CATALOGO_BLUETTI = [
 # Catálogo MUST Generado Dinámicamente (DoD al 90%)
 CATALOGO_MUST = []
 
+# EP30-3024 LV2: Hasta 4 baterías 24V 100Ah
 FOR_MUST_24V_WH_UTIL_PER_BAT = 2400 * 0.90
-for n in range(1, 6):
+for n in range(1, 5):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"EP30-3024 LV2 + {cant_str}batería 24V 100Ah",
@@ -194,14 +195,16 @@ for n in range(1, 6):
         "wh_util": round(FOR_MUST_24V_WH_UTIL_PER_BAT * n, 1),
         "v220": False,
         "bat_type": "24V100",
+        "cant_bat": n,
         "fichas": [
             {"nombre": "Inversor EP30-3024 LV2", "base": "fichas/must_ep30"},
             {"nombre": "Batería 24V 100Ah", "base": "fichas/must_bat_24v100"}
         ]
     })
 
+# PV33-6048 TLV + LP16-48100: Hasta 4 baterías
 FOR_MUST_48100_WH_UTIL_PER_BAT = 5120 * 0.90
-for n in range(1, 11):
+for n in range(1, 5):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV33-6048 TLV + {cant_str}LP16-48100",
@@ -210,14 +213,16 @@ for n in range(1, 11):
         "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48100",
+        "cant_bat": n,
         "fichas": [
             {"nombre": "Inversor PV33-6048 TLV", "base": "fichas/must_pv33"},
             {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
         ]
     })
 
+# PV33-6048 TLV + LP16-48200: Hasta 2 baterías
 FOR_MUST_48200_WH_UTIL_PER_BAT = 10240 * 0.90
-for n in range(1, 11):
+for n in range(1, 3):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV33-6048 TLV + {cant_str}LP16-48200",
@@ -226,13 +231,15 @@ for n in range(1, 11):
         "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48200",
+        "cant_bat": n,
         "fichas": [
             {"nombre": "Inversor PV33-6048 TLV", "base": "fichas/must_pv33"},
             {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
         ]
     })
 
-for n in range(1, 11):
+# PV39-12048 TLV + LP16-48100: Hasta 14 baterías
+for n in range(1, 15):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV39-12048 TLV + {cant_str}LP16-48100",
@@ -241,13 +248,15 @@ for n in range(1, 11):
         "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48100",
+        "cant_bat": n,
         "fichas": [
             {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
             {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
         ]
     })
 
-for n in range(1, 11):
+# PV39-12048 TLV + LP16-48200: Hasta 7 baterías
+for n in range(1, 8):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
         "modelo": f"PV39-12048 TLV + {cant_str}LP16-48200",
@@ -256,6 +265,7 @@ for n in range(1, 11):
         "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * n, 1),
         "v220": True,
         "bat_type": "LP16-48200",
+        "cant_bat": n,
         "fichas": [
             {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
             {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
@@ -283,7 +293,7 @@ def obtener_marca_agua_pdf(opacidad=0.30):
         return None
 
 # --- FUNCIÓN GENERADORA DE PDF CON MARCA DE AGUA CENTRADA ---
-def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec):
+def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec, must_rec_alt=None):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -329,8 +339,6 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
     pdf.set_font("Helvetica", "", 10)
 
     if bluetti_rec:
-        pct_w = min(w_req / bluetti_rec['w'], 1.0) * 100
-        pct_wh = min(wh_req / bluetti_rec['wh_util'], 1.0) * 100
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(0, 6, f"Opcion Estacion Portatil BLUETTI: {bluetti_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
@@ -338,12 +346,17 @@ def generar_pdf_propuesta(cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec
         pdf.ln(3)
 
     if must_rec:
-        pct_w = min(w_req / must_rec['w'], 1.0) * 100
-        pct_wh = min(wh_req / must_rec['wh_util'], 1.0) * 100
         pdf.set_font("Helvetica", "B", 10)
-        pdf.cell(0, 6, f"Opcion Sistema Estacionario MUST: {must_rec['modelo']}", ln=True)
+        pdf.cell(0, 6, f"Opcion Sistema Estacionario MUST (Op. A): {must_rec['modelo']}", ln=True)
         pdf.set_font("Helvetica", "", 9)
         pdf.cell(0, 5, f"- Capacidad: {must_rec['w']}W Continuos | {must_rec['wh_util']:.0f}Wh Utiles", ln=True)
+        pdf.ln(3)
+
+    if must_rec_alt:
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 6, f"Opcion Sistema Estacionario MUST (Op. B): {must_rec_alt['modelo']}", ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(0, 5, f"- Capacidad: {must_rec_alt['w']}W Continuos | {must_rec_alt['wh_util']:.0f}Wh Utiles", ln=True)
 
     pdf.ln(12)
     pdf.set_font("Helvetica", "I", 8)
@@ -530,6 +543,18 @@ if st.session_state.cargas:
             if (w_req / must_rec['w']) < 0.35:
                 must_rec = None
 
+        # Evaluación de alternativa equivalente en batería 48200 cuando 48100 es par
+        must_rec_alt = None
+        if must_rec and must_rec.get('bat_type') == 'LP16-48100' and must_rec.get('cant_bat', 1) % 2 == 0:
+            cant_200 = must_rec['cant_bat'] // 2
+            must_rec_alt = next(
+                (m for m in cat_must_eval 
+                 if m['w'] == must_rec['w'] 
+                 and m.get('bat_type') == 'LP16-48200' 
+                 and m.get('cant_bat') == cant_200),
+                None
+            )
+
         if not bluetti_rec and not must_rec:
             st.error("🔴 Se requiere un sistema industrial superior al catálogo comercial estándar.")
         else:
@@ -539,6 +564,9 @@ if st.session_state.cargas:
             if must_rec:
                 render_propuesta(must_rec, w_req, wh_req, "MUST", "must_optima")
 
+            if must_rec_alt:
+                render_propuesta(must_rec_alt, w_req, wh_req, "MUST", "must_alt")
+
             # --- SECCIÓN 3: EXPORTACIÓN Y COMPARTIR ---
             st.subheader("3. Exportar y Compartir Propuesta")
             
@@ -546,7 +574,7 @@ if st.session_state.cargas:
 
             # Botón 1: Descarga de PDF
             with col_exp1:
-                pdf_bytes = generar_pdf_propuesta(st.session_state.cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec)
+                pdf_bytes = generar_pdf_propuesta(st.session_state.cargas, w_req, wh_req, pico_req, bluetti_rec, must_rec, must_rec_alt)
                 st.download_button(
                     label="📄 Descargar Propuesta en PDF",
                     data=pdf_bytes,
@@ -567,7 +595,9 @@ if st.session_state.cargas:
                 if bluetti_rec:
                     msg_wa += f"• BLUETTI: {bluetti_rec['modelo']}\n"
                 if must_rec:
-                    msg_wa += f"• MUST: {must_rec['modelo']}\n"
+                    msg_wa += f"• MUST (Opción A): {must_rec['modelo']}\n"
+                if must_rec_alt:
+                    msg_wa += f"• MUST (Opción B): {must_rec_alt['modelo']}\n"
                 
                 wa_url = f"https://api.whatsapp.com/send?text={urllib.parse.quote(msg_wa)}"
                 st.link_button("📱 Compartir por WhatsApp", wa_url, use_container_width=True)
