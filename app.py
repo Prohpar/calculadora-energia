@@ -184,7 +184,7 @@ CATALOGO_BLUETTI = [
 # Catálogo MUST Generado Dinámicamente (DoD al 90%)
 CATALOGO_MUST = []
 
-# EP30-3024 LV2: Hasta 4 baterías 24V 100Ah
+# 1. EP30-3024 LV2: Hasta 4 baterías 24V 100Ah
 FOR_MUST_24V_WH_UTIL_PER_BAT = 2400 * 0.90
 for n in range(1, 5):
     cant_str = f"{n}x " if n > 1 else ""
@@ -202,7 +202,7 @@ for n in range(1, 5):
         ]
     })
 
-# PV33-6048 TLV + LP16-48100: Hasta 4 baterías
+# 2. PV33-6048 TLV + LP16-48100: Hasta 4 baterías
 FOR_MUST_48100_WH_UTIL_PER_BAT = 5120 * 0.90
 for n in range(1, 5):
     cant_str = f"{n}x " if n > 1 else ""
@@ -220,7 +220,7 @@ for n in range(1, 5):
         ]
     })
 
-# PV33-6048 TLV + LP16-48200: Hasta 2 baterías
+# 3. PV33-6048 TLV + LP16-48200: Hasta 2 baterías
 FOR_MUST_48200_WH_UTIL_PER_BAT = 10240 * 0.90
 for n in range(1, 3):
     cant_str = f"{n}x " if n > 1 else ""
@@ -238,7 +238,7 @@ for n in range(1, 3):
         ]
     })
 
-# PV39-12048 TLV + LP16-48100: Hasta 14 baterías
+# 4. PV39-12048 TLV (1 Unidad) + LP16-48100: Hasta 14 baterías
 for n in range(1, 15):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -255,7 +255,7 @@ for n in range(1, 15):
         ]
     })
 
-# PV39-12048 TLV + LP16-48200: Hasta 7 baterías
+# 5. PV39-12048 TLV (1 Unidad) + LP16-48200: Hasta 7 baterías
 for n in range(1, 8):
     cant_str = f"{n}x " if n > 1 else ""
     CATALOGO_MUST.append({
@@ -266,6 +266,78 @@ for n in range(1, 8):
         "v220": True,
         "bat_type": "LP16-48200",
         "cant_bat": n,
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# 6. 2x PV39-12048 TLV en Paralelo (24 kW) + LP16-48100: Hasta 14 baterías por inversor (Total 28)
+for n_per_inv in range(1, 15):
+    cant_total = n_per_inv * 2
+    cant_str_per_inv = f"{n_per_inv}x " if n_per_inv > 1 else "1x "
+    CATALOGO_MUST.append({
+        "modelo": f"2x PV39-12048 TLV (Paralelo 24kW) + 2 bancos de {cant_str_per_inv}LP16-48100 (Total {cant_total}x)",
+        "w": 24000,
+        "pico": 72000,
+        "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * cant_total, 1),
+        "v220": True,
+        "bat_type": "LP16-48100",
+        "cant_bat": cant_total,
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# 7. 2x PV39-12048 TLV en Paralelo (24 kW) + LP16-48200: Hasta 7 baterías por inversor (Total 14)
+for n_per_inv in range(1, 8):
+    cant_total = n_per_inv * 2
+    cant_str_per_inv = f"{n_per_inv}x " if n_per_inv > 1 else "1x "
+    CATALOGO_MUST.append({
+        "modelo": f"2x PV39-12048 TLV (Paralelo 24kW) + 2 bancos de {cant_str_per_inv}LP16-48200 (Total {cant_total}x)",
+        "w": 24000,
+        "pico": 72000,
+        "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * cant_total, 1),
+        "v220": True,
+        "bat_type": "LP16-48200",
+        "cant_bat": cant_total,
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# 8. 3x PV39-12048 TLV en Paralelo (36 kW) + LP16-48100: Hasta 14 baterías por inversor (Total 42)
+for n_per_inv in range(1, 15):
+    cant_total = n_per_inv * 3
+    cant_str_per_inv = f"{n_per_inv}x " if n_per_inv > 1 else "1x "
+    CATALOGO_MUST.append({
+        "modelo": f"3x PV39-12048 TLV (Paralelo 36kW) + 3 bancos de {cant_str_per_inv}LP16-48100 (Total {cant_total}x)",
+        "w": 36000,
+        "pico": 108000,
+        "wh_util": round(FOR_MUST_48100_WH_UTIL_PER_BAT * cant_total, 1),
+        "v220": True,
+        "bat_type": "LP16-48100",
+        "cant_bat": cant_total,
+        "fichas": [
+            {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
+            {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
+        ]
+    })
+
+# 9. 3x PV39-12048 TLV en Paralelo (36 kW) + LP16-48200: Hasta 7 baterías por inversor (Total 21)
+for n_per_inv in range(1, 8):
+    cant_total = n_per_inv * 3
+    cant_str_per_inv = f"{n_per_inv}x " if n_per_inv > 1 else "1x "
+    CATALOGO_MUST.append({
+        "modelo": f"3x PV39-12048 TLV (Paralelo 36kW) + 3 bancos de {cant_str_per_inv}LP16-48200 (Total {cant_total}x)",
+        "w": 36000,
+        "pico": 108000,
+        "wh_util": round(FOR_MUST_48200_WH_UTIL_PER_BAT * cant_total, 1),
+        "v220": True,
+        "bat_type": "LP16-48200",
+        "cant_bat": cant_total,
         "fichas": [
             {"nombre": "Inversor PV39-12048 TLV", "base": "fichas/must_pv39"},
             {"nombre": "Batería Serie LP16", "base": "fichas/must_lp16"}
