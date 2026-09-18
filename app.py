@@ -598,24 +598,13 @@ if st.session_state.cargas:
             None
         )
 
-        MIN_UTIL_W = 0.25
+        # Selección directa del primer equipo MUST que satisfaga la demanda sin restricción de límite inferior
         candidatos_must = [
             m for m in cat_must_eval 
             if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
-            and (w_req / m['w']) >= MIN_UTIL_W
         ]
 
-        if not candidatos_must and not bluetti_rec:
-            candidatos_must = [
-                m for m in cat_must_eval 
-                if m['w'] >= w_req and m['wh_util'] >= wh_req and m['pico'] >= pico_req
-            ]
-
         must_rec = candidatos_must[0] if candidatos_must else None
-
-        if w_req <= 1800 and bluetti_rec and must_rec:
-            if (w_req / must_rec['w']) < 0.35:
-                must_rec = None
 
         # Evaluación de alternativa equivalente en batería 48200 cuando 48100 es par
         must_rec_alt = None
